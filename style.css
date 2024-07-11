@@ -1,0 +1,211 @@
+* {
+   /* Reset default margin and padding */
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.game-container {
+  background-color: #fff;
+  width: 100%;
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.balance-result-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+  padding-left: 0px;
+  padding-right: 0px;
+  margin: 0;
+}
+
+.balance-container,
+.time-container,
+.winner-container {
+  padding: 10px;
+  margin-bottom: 0;
+  border-radius: 10px;
+  text-align: center;
+}
+.points-text,
+.next-result-time,
+.winner-text {
+  background-color: #A9A9A9;
+  margin-bottom: 0;
+  padding: 10px;
+  width: 280px;
+  border-radius: 10px;
+  color: #ffffff;
+}
+
+.balance,
+.running-time,
+.winning-number {
+  background-color: #606060;
+  padding: 10px;
+  width: 280px;
+  border-radius: 10px;
+  margin-top: 0px;
+  color: #ffffff;
+}
+
+.winner-display-container {
+  display: flex;
+  justify-content: center;
+}
+
+.winner-img-cont {
+  border: 5px dashed orange;
+  width: 150px;
+  height: 150px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+}
+
+.result-table {
+  width: 150px;
+  background-color: aqua;
+  border-collapse: collapse;
+}
+
+.result-table td {
+  padding: 2px;
+  font-size: 12px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.result-num-img-tb {
+  width: 50px;
+  height: 50px;
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.result-num-image {
+  height: 142px;
+  width: 142px;
+}
+
+.betting-points-buttons {
+  margin-top: 0px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0px;
+}
+
+.bet-amt-buttons {
+  display: flex;
+  gap: 10px;
+  margin-right: 70px;
+  margin-left: 70px;
+  padding-bottom: 0px;
+  padding-top: 0px;
+}
+
+.bet-amt-btn {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  padding-bottom: 25px;
+}
+
+.bet-amt-image {
+  width: 60px;
+  height: 40px;
+}
+
+.bet-nums-cont {
+  display: flex;
+  justify-content: center;
+}
+
+.img-input-cont {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2px solid grey;
+}
+
+.img {
+  width: 150px;
+  height: 150px;
+  border: 2px solid grey;
+}
+
+.input {
+  width: 150px;
+  padding: 5px;
+  border: 2px solid grey;
+  text-align: center;
+  font-size: 14px;
+}
+
+.buttons-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  background-color: #F9F6EE;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.win-res-container {
+  display: flex;
+}
+
+.image-button {
+  position: relative;
+  border: none;
+  /* Remove default button border */
+  background: none;
+  /* Remove default button background */
+  cursor: pointer;
+  /* Change cursor to pointer on hover */
+  
+}
+
+/* Style for the button image */
+.image-button img {
+  display: block;
+  width: 150px;
+  /* Ensure the image fills the button */
+  height: auto;
+  /* Maintain aspect ratio */
+}
+
+/* Style for the button text */
+.button-text {
+  position: absolute;
+  top: 50%;
+  /* Center vertically */
+  left: 50%;
+  /* Center horizontally */
+  transform: translate(-50%, -50%);
+  /* Center precisely */
+  color: red;
+  /* Text color */
+  font-family: Arial, sans-serif;
+  /* Choose appropriate font */
+  font-size: 18px;
+  /* Adjust size as needed */
+  font-weight: bold;
+  /* Optionally, make text bold */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  /* Add shadow for readability */
+  padding-top: 5px;
+}
