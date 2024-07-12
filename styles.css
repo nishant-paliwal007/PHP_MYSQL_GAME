@@ -1,5 +1,5 @@
 * {
-   /* Reset default margin and padding */
+  /* Reset default margin and padding */
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -42,23 +42,29 @@ body {
 .points-text,
 .next-result-time,
 .winner-text {
-  background-color: #A9A9A9;
+  background-color: #a9a9a9;
   margin-bottom: 0;
-  padding: 10px;
+  height: 35px;
   width: 280px;
   border-radius: 10px;
   color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .balance,
 .running-time,
 .winning-number {
   background-color: #606060;
-  padding: 10px;
+  height: 35px;
   width: 280px;
   border-radius: 10px;
   margin-top: 0px;
   color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .winner-display-container {
@@ -104,7 +110,7 @@ body {
 .betting-points-buttons {
   margin-top: 0px;
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   margin-bottom: 0px;
 }
 
@@ -112,7 +118,7 @@ body {
   display: flex;
   gap: 10px;
   /* margin-right: 70px;
-  margin-left: 70px; */
+ margin-left: 70px; */
   padding-bottom: 0px;
   padding-top: 0px;
 }
@@ -159,7 +165,7 @@ body {
   margin-top: 20px;
   display: flex;
   justify-content: center;
-  background-color: #F9F6EE;
+  background-color: #f9f6ee;
   padding: 10px;
   border-radius: 10px;
 }
@@ -176,7 +182,6 @@ body {
   /* Remove default button background */
   cursor: pointer;
   /* Change cursor to pointer on hover */
-  
 }
 
 /* Style for the button image */

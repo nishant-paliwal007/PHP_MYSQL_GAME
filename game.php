@@ -5,10 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game</title>
-    <link rel="stylesheet" href="style.css">
-    <style>
-        /* Add your CSS styles here or link to an external stylesheet */
-    </style>
+    <link rel="stylesheet" href="styles.css">
+
     <script>
         function confirmLogout() {
             var result = confirm("Are you sure you want to logout?");
@@ -68,8 +66,8 @@
                     <p class="balance"><?php echo $balance; ?></p>
                 </div>
                 <div class="time-container">
-                    <p class="next-result-time">12:00 pm</p>
-                    <p class="running-time">running time</p>
+                    <div class="next-result-time">12:00 pm</div>
+                    <div class="running-time">running time</div>
                 </div>
             </div>
             <div class="win-res-container">
