@@ -143,7 +143,7 @@
                     <img src="./images/eleven.png" class="bet-amt-image" alt="">
                 </button>
             </div>
-            <div>
+            <div class="bet-amt-buttons">
                 <button type="button" class="bet-amt-btn" onclick="selectAmount(200)">
                     <img src="./images/200.png" class="bet-amt-image" alt="">
                 </button>
