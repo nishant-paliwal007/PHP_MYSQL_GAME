@@ -27,7 +27,6 @@
             var inputBox = document.getElementById(inputId);
             var currentValue = parseFloat(inputBox.value || 0);
             inputBox.value = currentValue + betAmount;
-            updateTotal();
         }
 
         function clearInputs() {
@@ -36,16 +35,6 @@
                 input.value = "";
             });
             betAmount = 0;
-            updateTotal();
-        }
-
-        function updateTotal() {
-            var inputs = document.querySelectorAll('input[type="text"]');
-            var total = 0;
-            inputs.forEach(function(input) {
-                total += parseFloat(input.value || 0);
-            });
-            document.getElementById('totalButton').innerText = 'Total: ' + total.toFixed(2); // Display total
         }
     </script>
 </head>
@@ -143,7 +132,7 @@
                     <img src="./images/eleven.png" class="bet-amt-image" alt="">
                 </button>
             </div>
-            <div>
+            <div class="bet-amt-buttons">
                 <button type="button" class="bet-amt-btn" onclick="selectAmount(200)">
                     <img src="./images/200.png" class="bet-amt-image" alt="">
                 </button>
@@ -232,14 +221,11 @@
                 </button>
                 <button class="image-button" type="button">
                     <img src="./images/button.png" alt="Button Image">
-                    <span id="totalButton" class="button-text"></span>
+                    <span class="button-text"></span>
                 </button>
             </form>
         </div>
     </div>
-    <script>
-        updateTotal(); // Initial update of total on page load
-    </script>
 </body>
 
 </html>

@@ -20,6 +20,8 @@ if (isset($_POST['submit'])) {
         die("Query failed: " . mysqli_error($conn));
     }
 
+
+
     // Check if any user with given credentials exists
     if (mysqli_num_rows($result) > 0) {
         // Login successful
