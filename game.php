@@ -1,3 +1,7 @@
+<?php
+include "./session_check.php";
+include "./connection.php";
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,7 +10,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game</title>
     <link rel="stylesheet" href="styles.css">
-
     <script>
         function confirmLogout() {
             var result = confirm("Are you sure you want to logout?");
@@ -45,6 +48,56 @@
             });
             document.getElementById('totalButton').innerText = 'Total: ' + total.toFixed(2); // Display total
         }
+
+        function updateCountdown() {
+            var now = new Date();
+            var nextResultTime = new Date(now.getTime() + (5 - now.getMinutes() % 5) * 60000);
+            nextResultTime.setSeconds(0, 0);
+
+            var countdown = (nextResultTime - now) / 1000;
+
+            var interval = setInterval(function() {
+                var minutes = Math.floor(countdown / 60);
+                var seconds = Math.floor(countdown % 60);
+                document.querySelector('.running-time').innerText = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+                countdown--;
+
+                if (countdown < 0) {
+                    clearInterval(interval);
+                    fetch('./update_result.php')
+                        .then(response => response.json())
+                        .then(data => {
+                            document.querySelector('.winner-img-cont img').src = './images/' + data.winner + '.png';
+                            document.querySelector('.winner-text-cont .winning-number').innerText = data.winner;
+                            updateResultsTable();
+                        })
+                        .catch(error => console.error('Error:', error));
+
+                    updateCountdown(); // Restart countdown for the next interval
+                }
+            }, 1000);
+
+            // Update the next result time display
+            document.querySelector('.next-result-time').innerText = nextResultTime.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function updateResultsTable() {
+            fetch('./fetch_results.php')
+                .then(response => response.text())
+                .then(data => {
+                    document.querySelector('.result-table').innerHTML = data;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTotal(); // Initial update of total on page load
+            updateResultsTable(); // Fetch initial results
+            updateCountdown(); // Start the countdown
+        });
     </script>
 </head>
 
@@ -56,18 +109,18 @@
                     <p class="points-text">POINTS</p>
                     <!-- Fetch the balance from PHP -->
                     <?php
-                    include "./connection.php";
-                    include "./session_check.php";
+                    // include "./connection.php";
+                    // include "./session_check.php";
                     $username = $_SESSION['username'];
                     $fetch_balance = mysqli_query($conn, "SELECT * FROM balance WHERE username= '$username'");
                     $balance_data = mysqli_fetch_assoc($fetch_balance);
-                    $balance = $balance_data['balance']; // fetched the balance from the associative array
+                    $balance = $balance_data['balance'];
                     ?>
                     <p class="balance"><?php echo $balance; ?></p>
                 </div>
                 <div class="time-container">
-                    <div class="next-result-time">12:00 pm</div>
-                    <div class="running-time">running time</div>
+                    <div class="next-result-time"></div>
+                    <div class="running-time"></div>
                 </div>
             </div>
             <div class="win-res-container">
@@ -83,46 +136,7 @@
                     </div>
                 </div>
                 <table class="result-table">
-                    <tr>
-                        <td>
-                            <div>
-                                <span>12:00pm</span>
-                                <img class="result-num-img-tb" src="./images/1.png" alt="">
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div>
-                                <span>12:05pm</span>
-                                <img class="result-num-img-tb" src="./images/2.png" alt="">
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div>
-                                <span>12:10pm</span>
-                                <img class="result-num-img-tb" src="./images/3.png" alt="">
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div>
-                                <span>12:15pm</span>
-                                <img class="result-num-img-tb" src="./images/4.png" alt="">
-                            </div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <div>
-                                <span>12:20pm</span>
-                                <img class="result-num-img-tb" src="./images/5.png" alt="">
-                            </div>
-                        </td>
-                    </tr>
+                    <!-- Results will be dynamically loaded here -->
                 </table>
             </div>
         </div>
@@ -209,35 +223,32 @@
                     <input id="bet_input_12" class="input" type="text" name="bet_input_12" value="">
                 </div>
             </div>
-        </div>
-        <div class="buttons-container">
-            <form id="betAmountForm" method="post" action="">
-                <button class="image-button" type="submit" form="betAmountForm" name="bet_ok">
-                    <img src="./images/button.png" alt="Button Image">
-                    <span class="button-text">Bet Ok</span>
-                </button>
-                <button class="image-button" type="button" onclick="clearInputs()">
-                    <img src="./images/button.png" alt="Button Image">
-                    <span class="button-text">Clear</span>
-                </button>
-                <button class="image-button" type="button">
-                    <img src="./images/button.png" alt="Button Image">
-                    <span class="button-text">Report</span>
-                </button>
-                <button class="image-button" type="button" onclick="confirmLogout()">
-                    <img src="./images/button.png" alt="Button Image">
-                    <span class="button-text">Logout</span>
-                </button>
-                <button class="image-button" type="button">
-                    <img src="./images/button.png" alt="Button Image">
-                    <span id="totalButton" class="button-text"></span>
-                </button>
-            </form>
+            <div class="buttons-container">
+                <form id="betAmountForm" method="post" action="">
+                    <button class="image-button" type="submit" form="betAmountForm" name="bet_ok">
+                        <img src="./images/button.png" alt="Button Image">
+                        <span class="button-text">Bet Ok</span>
+                    </button>
+                    <button class="image-button" type="button" onclick="clearInputs()">
+                        <img src="./images/button.png" alt="Button Image">
+                        <span class="button-text">Clear</span>
+                    </button>
+                    <button class="image-button" type="button">
+                        <img src="./images/button.png" alt="Button Image">
+                        <span class="button-text">Report</span>
+                    </button>
+                    <button class="image-button" type="button" onclick="confirmLogout()">
+                        <img src="./images/button.png" alt="Button Image">
+                        <span class="button-text">Logout</span>
+                    </button>
+                    <button class="image-button" type="button">
+                        <img src="./images/button.png" alt="Button Image">
+                        <span id="totalButton" class="button-text"></span>
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
-    <script>
-        updateTotal(); // Initial update of total on page load
-    </script>
 </body>
 
 </html>
