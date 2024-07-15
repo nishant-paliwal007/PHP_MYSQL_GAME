@@ -1,6 +1,7 @@
 <?php
 include "./session_check.php";
 include "./connection.php";
+include "./populate_results.php";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -51,58 +52,79 @@ include "./connection.php";
 
         function updateCountdown() {
             var now = new Date();
-            var nextResultTime = new Date(now.getTime() + (5 - now.getMinutes() % 5) * 60000);
-            nextResultTime.setSeconds(0, 0);
+            var nextResultTime;
 
-            var countdown = (nextResultTime - now) / 1000;
+            // Check if current time is between 08:00 AM and 10:00 PM
+            if (now.getHours() >= 8 && now.getHours() < 22) {
+                // Calculate next result time within the same day
+                nextResultTime = new Date(now.getTime() + (5 - now.getMinutes() % 5) * 60000);
+            } else {
+                // Set next result time to undefined to indicate no active countdown
+                nextResultTime = undefined;
+            }
 
-            var interval = setInterval(function() {
-                var minutes = Math.floor(countdown / 60);
-                var seconds = Math.floor(countdown % 60);
-                document.querySelector('.running-time').innerText = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
-                countdown--;
+            // Ensure seconds and milliseconds are set to zero for precise timing
+            if (nextResultTime) {
+                nextResultTime.setSeconds(0, 0);
+            }
 
-                if (countdown < 0) {
-                    clearInterval(interval);
-                    fetch('./update_result.php')
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.winner !== undefined) {
-                                // Update winner display
-                                document.querySelector('.winner-text-cont .winning-number').innerText = data.winner;
+            // Update UI based on next result time availability
+            if (nextResultTime) {
+                var countdown = (nextResultTime - now) / 1000;
 
-                                // Get image URL based on result number
-                                var image_url = `./images/${data.winner}.png`;
+                var interval = setInterval(function() {
+                    var minutes = Math.floor(countdown / 60);
+                    var seconds = Math.floor(countdown % 60);
+                    document.querySelector('.running-time').innerText = minutes.toString().padStart(2, '0') + ':' + seconds.toString().padStart(2, '0');
+                    countdown--;
 
-                                // Update winner image
-                                var winnerImage = document.querySelector('.result-num-image');
-                                if (winnerImage) {
-                                    winnerImage.src = image_url;
-                                    winnerImage.alt = data.winner;
+                    if (countdown < 0) {
+                        clearInterval(interval);
+                        fetch('./update_result.php')
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.winner !== undefined) {
+                                    // Update winner display
+                                    document.querySelector('.winner-text-cont .winning-number').innerText = data.winner;
+
+                                    // Get image URL based on result number
+                                    var image_url = `./images/${data.winner}.png`;
+
+                                    // Update winner image
+                                    var winnerImage = document.querySelector('.result-num-image');
+                                    if (winnerImage) {
+                                        winnerImage.src = image_url;
+                                        winnerImage.alt = data.winner;
+                                    }
+
+                                    updateResultsTable();
+                                    // Store the new winner in localStorage
+                                    localStorage.setItem('previousWinner', data.winner);
+                                } else {
+                                    console.error('No winner data received');
                                 }
+                            })
+                            .catch(error => console.error('Error:', error));
 
-                                updateResultsTable();
-                                // Store the new winner in localStorage
-                                localStorage.setItem('previousWinner', data.winner);
-                            } else {
-                                console.error('No winner data received');
-                            }
-                        })
-                        .catch(error => console.error('Error:', error));
+                        updateCountdown(); // Restart countdown for the next interval
+                    }
+                }, 1000);
 
-                    updateCountdown(); // Restart countdown for the next interval
-                }
-            }, 1000);
-
-            // Update the next result time display
-            document.querySelector('.next-result-time').innerText = nextResultTime.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+                // Update the next result time display
+                document.querySelector('.next-result-time').innerText = nextResultTime.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } else {
+                // No active countdown, set placeholders
+                document.querySelector('.running-time').innerText = '--:--';
+                document.querySelector('.next-result-time').innerText = '--:--';
+            }
         }
 
+
         function updateResultsTable() {
-            fetch('./fetch_results.php')
+            fetch('./fetch_latest_results.php')
                 .then(response => response.text())
                 .then(data => {
                     document.querySelector('.result-table').innerHTML = data;
@@ -116,7 +138,7 @@ include "./connection.php";
                 var previousWinner = localStorage.getItem('previousWinner');
                 if (previousWinner) {
                     document.querySelector('.winner-img-cont img').src = './images/' + previousWinner + '.png';
-                    document.querySelector('.winner-text-cont .winning-number').innerText = previousWinner;
+                    document.querySelector('.winner-text-cont .winning-number').innerText = 'Winner'; // Set to "Winner"
                 } else {
                     document.querySelector('.winner-text-cont .winning-number').innerText = 'Waiting...';
                 }
@@ -149,9 +171,6 @@ include "./connection.php";
         });
     </script>
 
-
-
-
 </head>
 
 <body>
@@ -162,10 +181,12 @@ include "./connection.php";
                     <p class="points-text">POINTS</p>
                     <!-- Fetch the balance from PHP -->
                     <?php
+                    include "./connection.php";
                     $username = $_SESSION['username'];
                     $fetch_balance = mysqli_query($conn, "SELECT * FROM balance WHERE username= '$username'");
                     $balance_data = mysqli_fetch_assoc($fetch_balance);
                     $balance = $balance_data['balance'];
+
                     ?>
                     <p class="balance"><?php echo $balance; ?></p>
                 </div>
@@ -177,8 +198,13 @@ include "./connection.php";
             <div class="win-res-container">
                 <div class="winner-container">
                     <div class="winner-text-cont">
-                        <p class="winner-text">Winner</p>
-                        <p class="winning-number">0</p>
+                        <!-- <p class="winner-text">Winner</p> -->
+                        <!-- later display total betting amout in place of Winner -->
+                        <p class="winning-number" id="winningNumber"><?php echo htmlspecialchars($_SESSION['winning-number'] ?? '0'); ?></p>
+                        <p class="total-bet-amt" style="background-color: darkgrey;height: 
+                        35px;width: 280px;border-radius: 10px;margin-top: 0px;color: #ffffff;
+                        display: flex;justify-content: center;align-items: center;">Total Bet Amt: 0</p>
+
                     </div>
                     <div class="winner-display-container">
                         <div class="winner-img-cont">
@@ -187,7 +213,7 @@ include "./connection.php";
                     </div>
                 </div>
                 <table class="result-table">
-                    <!-- Results will be dynamically loaded here -->
+
                 </table>
             </div>
         </div>
@@ -295,7 +321,7 @@ include "./connection.php";
                 </button>
                 <button class="image-button" type="button">
                     <img src="./images/button.png" alt="Button Image">
-                    <span id="totalButton" class="button-text"></span>
+                    <span id="totalButton" class="button-text" style="color: black;"></span>
                 </button>
             </form>
         </div>

@@ -1,6 +1,7 @@
 <?php
 include "./session_check.php";
 include "./connection.php";
+include "./populate_results.php";
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,18 +12,6 @@ include "./connection.php";
     <title>Game</title>
     <link rel="stylesheet" href="styles.css">
     <script>
-        // Function to initialize winner display from localStorage or default text
-        function initializeWinnerDisplay() {
-            var previousWinner = localStorage.getItem('previousWinner');
-            if (previousWinner) {
-                document.querySelector('.winner-img-cont img').src = './images/' + previousWinner + '.png';
-                document.querySelector('.winner-text-cont .winning-number').innerText = previousWinner;
-            } else {
-                document.querySelector('.winner-text-cont .winning-number').innerText = 'Waiting...';
-            }
-        }
-
-        // Function to confirm logout
         function confirmLogout() {
             var result = confirm("Are you sure you want to logout?");
             if (result) {
@@ -30,15 +19,12 @@ include "./connection.php";
             }
         }
 
-        // Variable for default bet amount
-        var betAmount = 0;
+        var betAmount = 0; // Default bet amount
 
-        // Function to select bet amount
         function selectAmount(amount) {
             betAmount = amount;
         }
 
-        // Function to handle image click and update input value
         function handleImageClick(inputId) {
             var inputBox = document.getElementById(inputId);
             var currentValue = parseFloat(inputBox.value || 0);
@@ -46,7 +32,6 @@ include "./connection.php";
             updateTotal();
         }
 
-        // Function to clear all input values and reset bet amount
         function clearInputs() {
             var inputs = document.querySelectorAll('input[type="text"]');
             inputs.forEach(function(input) {
@@ -56,17 +41,15 @@ include "./connection.php";
             updateTotal();
         }
 
-        // Function to update total of input values
         function updateTotal() {
             var inputs = document.querySelectorAll('input[type="text"]');
             var total = 0;
             inputs.forEach(function(input) {
                 total += parseFloat(input.value || 0);
             });
-            document.getElementById('totalButton').innerText = 'Total: ' + total.toFixed(2);
+            document.getElementById('totalButton').innerText = 'Total: ' + total.toFixed(2); // Display total
         }
 
-        // Function to update countdown timer
         function updateCountdown() {
             var now = new Date();
             var nextResultTime = new Date(now.getTime() + (5 - now.getMinutes() % 5) * 60000);
@@ -85,16 +68,30 @@ include "./connection.php";
                     fetch('./update_result.php')
                         .then(response => response.json())
                         .then(data => {
-                            document.querySelector('.winner-img-cont img').src = './images/' + data.winner + '.png';
-                            document.querySelector('.winner-text-cont .winning-number').innerText = data.winner;
-                            updateResultsTable();
-                            localStorage.setItem('previousWinner', data.winner);
+                            if (data.winner !== undefined) {
+                                // Update winner display
+                                document.querySelector('.winner-text-cont .winning-number').innerText = data.winner;
+
+                                // Get image URL based on result number
+                                var image_url = `./images/${data.winner}.png`;
+
+                                // Update winner image
+                                var winnerImage = document.querySelector('.result-num-image');
+                                if (winnerImage) {
+                                    winnerImage.src = image_url;
+                                    winnerImage.alt = data.winner;
+                                }
+
+                                updateResultsTable();
+                                // Store the new winner in localStorage
+                                localStorage.setItem('previousWinner', data.winner);
+                            } else {
+                                console.error('No winner data received');
+                            }
                         })
                         .catch(error => console.error('Error:', error));
 
                     updateCountdown(); // Restart countdown for the next interval
-                } else if (countdown === 0) {
-                    document.querySelector('.winner-text-cont .winning-number').innerText = 'Waiting...';
                 }
             }, 1000);
 
@@ -105,9 +102,8 @@ include "./connection.php";
             });
         }
 
-        // Function to update results table from server
         function updateResultsTable() {
-            fetch('./fetch_results.php')
+            fetch('./fetch_latest_results.php')
                 .then(response => response.text())
                 .then(data => {
                     document.querySelector('.result-table').innerHTML = data;
@@ -115,27 +111,44 @@ include "./connection.php";
                 .catch(error => console.error('Error:', error));
         }
 
-        // Event listener when DOM content is fully loaded
         document.addEventListener('DOMContentLoaded', function() {
-            initializeWinnerDisplay(); // Initialize winner display
-            updateCountdown(); // Start countdown timer
-            updateResultsTable(); // Fetch initial results
+            // Function to initialize winner display from localStorage or default text
+            function initializeWinnerDisplay() {
+                var previousWinner = localStorage.getItem('previousWinner');
+                if (previousWinner) {
+                    document.querySelector('.winner-img-cont img').src = './images/' + previousWinner + '.png';
+                    document.querySelector('.winner-text-cont .winning-number').innerText = 'Winner'; // Set to "Winner"
+                } else {
+                    document.querySelector('.winner-text-cont .winning-number').innerText = 'Waiting...';
+                }
+            }
+
+            // Start the countdown and initial fetch
+            initializeWinnerDisplay();
+            updateCountdown();
+            updateResultsTable();
 
             // Interval to update results every 5 minutes
             setInterval(function() {
                 fetch('./update_result.php')
                     .then(response => response.json())
                     .then(data => {
-                        document.querySelector('.winner-img-cont img').src = './images/' + data.winner + '.png';
-                        document.querySelector('.winner-text-cont .winning-number').innerText = data.winner;
-                        updateResultsTable();
-                        localStorage.setItem('previousWinner', data.winner);
+                        if (data.winner !== undefined) {
+                            // Update UI with new winner details
+                            document.querySelector('.winner-img-cont img').src = './images/' + data.winner + '.png';
+                            document.querySelector('.winner-text-cont .winning-number').innerText = data.winner;
+                            updateResultsTable();
+
+                            // Store winner in localStorage
+                            localStorage.setItem('previousWinner', data.winner);
+                        } else {
+                            console.error('No winner data received');
+                        }
                     })
                     .catch(error => console.error('Error:', error));
             }, 5 * 60 * 1000);
         });
     </script>
-
 </head>
 
 <body>
@@ -146,10 +159,12 @@ include "./connection.php";
                     <p class="points-text">POINTS</p>
                     <!-- Fetch the balance from PHP -->
                     <?php
+                    include "./connection.php";
                     $username = $_SESSION['username'];
                     $fetch_balance = mysqli_query($conn, "SELECT * FROM balance WHERE username= '$username'");
                     $balance_data = mysqli_fetch_assoc($fetch_balance);
                     $balance = $balance_data['balance'];
+
                     ?>
                     <p class="balance"><?php echo $balance; ?></p>
                 </div>
@@ -161,8 +176,14 @@ include "./connection.php";
             <div class="win-res-container">
                 <div class="winner-container">
                     <div class="winner-text-cont">
-                        <p class="winner-text">Winner</p>
-                        <p class="winning-number">0</p>
+                        <!-- <p class="winner-text">Winner</p> -->
+                        <!-- later display total betting amout in place of Winner -->
+                        <p class="winning-number" id="winningNumber"><?php echo htmlspecialchars($_SESSION['winning-number'] ?? '0'); ?></p>
+                        <p class="total-bet-amt" style="background-color: darkgrey;height: 
+                        35px;width: 280px;border-radius: 10px;margin-top: 0px;color: #ffffff;
+                        display: flex;justify-content: center;align-items: center;"
+                        >Total Bet Amt: 0</p>
+
                     </div>
                     <div class="winner-display-container">
                         <div class="winner-img-cont">
@@ -171,7 +192,7 @@ include "./connection.php";
                     </div>
                 </div>
                 <table class="result-table">
-                    <!-- Results will be dynamically loaded here -->
+
                 </table>
             </div>
         </div>
@@ -279,7 +300,7 @@ include "./connection.php";
                 </button>
                 <button class="image-button" type="button">
                     <img src="./images/button.png" alt="Button Image">
-                    <span id="totalButton" class="button-text"></span>
+                    <span id="totalButton" class="button-text" style="color: black;"></span>
                 </button>
             </form>
         </div>

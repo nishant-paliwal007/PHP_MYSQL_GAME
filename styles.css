@@ -55,8 +55,9 @@ body {
 
 .balance,
 .running-time,
-.winning-number {
-  background-color: #606060;
+.winning-number
+ {
+  background-color: darkgrey;
   height: 35px;
   width: 280px;
   border-radius: 10px;
@@ -66,6 +67,8 @@ body {
   justify-content: center;
   align-items: center;
 }
+
+
 
 .winner-display-container {
   display: flex;
