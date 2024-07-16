@@ -10,7 +10,7 @@ include "./populate_results.php";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="style.css">
     <script>
         function confirmLogout() {
             var result = confirm("Are you sure you want to logout?");
@@ -84,13 +84,8 @@ include "./populate_results.php";
                             .then(response => response.json())
                             .then(data => {
                                 if (data.winner !== undefined) {
-                                    // Update winner display
-                                    document.querySelector('.winner-text-cont .winning-number').innerText = data.winner;
-
-                                    // Get image URL based on result number
-                                    var image_url = `./images/${data.winner}.png`;
-
                                     // Update winner image
+                                    var image_url = `./images/${data.winner}.png`;
                                     var winnerImage = document.querySelector('.result-num-image');
                                     if (winnerImage) {
                                         winnerImage.src = image_url;
@@ -122,7 +117,6 @@ include "./populate_results.php";
             }
         }
 
-
         function updateResultsTable() {
             fetch('./fetch_latest_results.php')
                 .then(response => response.text())
@@ -137,10 +131,12 @@ include "./populate_results.php";
             function initializeWinnerDisplay() {
                 var previousWinner = localStorage.getItem('previousWinner');
                 if (previousWinner) {
-                    document.querySelector('.winner-img-cont img').src = './images/' + previousWinner + '.png';
-                    document.querySelector('.winner-text-cont .winning-number').innerText = 'Winner'; // Set to "Winner"
-                } else {
-                    document.querySelector('.winner-text-cont .winning-number').innerText = 'Waiting...';
+                    // Update winner image
+                    var winnerImage = document.querySelector('.result-num-image');
+                    if (winnerImage) {
+                        winnerImage.src = `./images/${previousWinner}.png`;
+                        winnerImage.alt = previousWinner;
+                    }
                 }
             }
 
@@ -155,12 +151,16 @@ include "./populate_results.php";
                     .then(response => response.json())
                     .then(data => {
                         if (data.winner !== undefined) {
-                            // Update UI with new winner details
-                            document.querySelector('.winner-img-cont img').src = './images/' + data.winner + '.png';
-                            document.querySelector('.winner-text-cont .winning-number').innerText = data.winner;
-                            updateResultsTable();
+                            // Update winner image
+                            var image_url = `./images/${data.winner}.png`;
+                            var winnerImage = document.querySelector('.result-num-image');
+                            if (winnerImage) {
+                                winnerImage.src = image_url;
+                                winnerImage.alt = data.winner;
+                            }
 
-                            // Store winner in localStorage
+                            updateResultsTable();
+                            // Store the new winner in localStorage
                             localStorage.setItem('previousWinner', data.winner);
                         } else {
                             console.error('No winner data received');
@@ -200,10 +200,12 @@ include "./populate_results.php";
                     <div class="winner-text-cont">
                         <!-- <p class="winner-text">Winner</p> -->
                         <!-- later display total betting amout in place of Winner -->
-                        <p class="winning-number" id="winningNumber"><?php echo htmlspecialchars($_SESSION['winning-number'] ?? '0'); ?></p>
+                        <p class="total-bet-amt" style="background-color: #303030;height: 
+                        35px;width: 280px;border-radius: 10px;margin-top: 0px;color: #ffffff;
+                        display: flex;justify-content: center;align-items: center;">Winner</p>
                         <p class="total-bet-amt" style="background-color: darkgrey;height: 
                         35px;width: 280px;border-radius: 10px;margin-top: 0px;color: #ffffff;
-                        display: flex;justify-content: center;align-items: center;">Total Bet Amt: 0</p>
+                        display: flex;justify-content: center;align-items: center;">Total Winning: 0</p>
 
                     </div>
                     <div class="winner-display-container">

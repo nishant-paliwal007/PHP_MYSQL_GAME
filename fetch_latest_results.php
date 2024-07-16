@@ -34,7 +34,7 @@ mysqli_close($conn);
 <table class="result-table">
     <thead>
         <tr>
-            <th style="padding: 10px; font-style: italic; color: red; text-decoration: underline;">Time</th>
+            <th style="padding: 5px; font-style: italic; color: red; text-decoration: underline;">Time</th>
             <th style="font-style: italic; color: red; text-decoration: underline;">Winner</th>
         </tr>
     </thead>

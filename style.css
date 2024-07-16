@@ -16,7 +16,7 @@ body {
 .game-container {
   background-color: #fff;
   width: 100%;
-  padding: 20px;
+  padding: 10px;
   border-radius: 10px;
 }
 
@@ -42,7 +42,7 @@ body {
 .points-text,
 .next-result-time,
 .winner-text {
-  background-color: #a9a9a9;
+  background-color: #303030;
   margin-bottom: 0;
   height: 35px;
   width: 280px;
@@ -53,9 +53,8 @@ body {
   align-items: center;
 }
 
-.balance,
-.running-time,
-.winning-number
+.balance
+
  {
   background-color: darkgrey;
   height: 35px;
@@ -68,6 +67,17 @@ body {
   align-items: center;
 }
 
+.running-time {
+  margin-bottom: 0;
+  height: 35px;
+  width: 280px;
+  border-radius: 10px;
+  color: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: darkgrey;
+}
 
 
 .winner-display-container {
@@ -84,11 +94,16 @@ body {
   align-items: center;
   margin-top: 20px;
 }
+.winning-number {
+  color: red;
+}
 
 .result-table {
   width: 150px;
+  margin-top: 8px;
   background-color: aqua;
   border-collapse: collapse;
+  border-radius: 10px;
 }
 
 .result-table td {
@@ -117,6 +132,10 @@ body {
   margin-bottom: 0px;
 }
 
+.betting-numbers-container {
+  margin-top: 0px;
+}
+
 .bet-amt-buttons {
   display: flex;
   gap: 10px;
@@ -124,6 +143,7 @@ body {
  margin-left: 70px; */
   padding-bottom: 0px;
   padding-top: 0px;
+  margin-bottom: 0px;
 }
 
 .bet-amt-btn {
@@ -141,6 +161,7 @@ body {
 .bet-nums-cont {
   display: flex;
   justify-content: center;
+ 
 }
 
 .img-input-cont {
@@ -165,11 +186,11 @@ body {
 }
 
 .buttons-container {
-  margin-top: 20px;
+  margin-top: 25px;
   display: flex;
   justify-content: center;
-  background-color: #f9f6ee;
-  padding: 10px;
+  background-color: #FAF9F6;
+  /* padding: 5px; */
   border-radius: 10px;
 }
 
