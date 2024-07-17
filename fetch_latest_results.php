@@ -5,10 +5,10 @@ date_default_timezone_set('Asia/Kolkata');
 
 // Get the current date and time
 $current_date = date('Y-m-d');
-$current_time = date('H:i:s');
+$current_time = date('H:i'); // 24-hour format
 
 // Check if it's before 08:00 AM
-if ($current_time < '08:00:00') {
+if ($current_time < '08:00') {
     // Calculate previous day
     $previous_date = date('Y-m-d', strtotime('-1 day', strtotime($current_date)));
 
@@ -16,16 +16,25 @@ if ($current_time < '08:00:00') {
     $query = "SELECT * FROM result_single WHERE res_date = '$previous_date' ORDER BY id DESC LIMIT 5";
 } else {
     // Fetch the latest 5 results for the current day and time range
-    $query = "SELECT * FROM result_single WHERE res_date = '$current_date' AND res_time <= '$current_time' ORDER BY res_time DESC LIMIT 5";
+    $query = "SELECT * FROM result_single WHERE res_date = '$current_date' AND STR_TO_DATE(res_time, '%h:%i %p') <= STR_TO_DATE('$current_time', '%H:%i') ORDER BY STR_TO_DATE(res_time, '%h:%i %p') DESC LIMIT 5";
 }
 
 $result = mysqli_query($conn, $query);
+
+if (!$result) {
+    // Debugging output
+    error_log("Error executing query: " . mysqli_error($conn));
+    die("Error executing query: " . mysqli_error($conn));
+}
 
 $results = [];
 
 while ($row = mysqli_fetch_assoc($result)) {
     $results[] = $row;
 }
+
+// Debugging output
+error_log("Fetched results: " . json_encode($results));
 
 // Close connection
 mysqli_close($conn);

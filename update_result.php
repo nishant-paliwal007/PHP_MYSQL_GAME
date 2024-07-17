@@ -23,4 +23,3 @@ echo json_encode($response);
 
 // Close connection
 mysqli_close($conn);
-?>

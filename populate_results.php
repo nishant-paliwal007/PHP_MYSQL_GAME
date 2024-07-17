@@ -18,8 +18,10 @@ if ($row_check['count'] == 0) {
     $interval = 5 * 60; // 5 minutes in seconds
 
     for ($time = $start_time; $time <= $end_time; $time += $interval) {
-        $res_time = date('h:i A', $time);
+        $res_time = date('h:i A', $time); // Format time as hh:mm AM/PM
         $res = rand(1, 12); // Random number between 1 and 12
+
+        // Insert data into the database
         $query_insert = "INSERT INTO result_single (res, res_time, res_date) VALUES ('$res', '$res_time', '$current_date')";
         if (mysqli_query($conn, $query_insert)) {
             error_log("Inserted: $res at $res_time on $current_date");
