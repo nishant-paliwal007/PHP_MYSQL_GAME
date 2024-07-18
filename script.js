@@ -72,13 +72,9 @@ function updateCountdown() {
         fetch("./update_result.php")
           .then((response) => response.json())
           .then((data) => {
+            console.log("Fetched data on countdown end:", data); // Add this line for debugging
             if (data.winner !== undefined) {
-              var image_url = `./images/${data.winner}.png`;
-              var winnerImage = document.querySelector(".result-num-image");
-              if (winnerImage) {
-                winnerImage.src = image_url;
-                winnerImage.alt = data.winner;
-              }
+              updateWinnerImage(data.winner);
               updateResultsTable();
               localStorage.setItem("previousWinner", data.winner);
             } else {
@@ -102,6 +98,18 @@ function updateCountdown() {
   }
 }
 
+function updateWinnerImage(winner) {
+  console.log("Updating winner image to:", winner); // Add this line for debugging
+  var image_url = `./images/${winner}.png`;
+  var winnerImage = document.querySelector(".result-num-image");
+  if (winnerImage) {
+    winnerImage.src = image_url;
+    winnerImage.alt = winner;
+  } else {
+    console.error("Winner image element not found");
+  }
+}
+
 // Function to update results table
 function updateResultsTable() {
   fetch("./fetch_latest_results.php")
@@ -119,12 +127,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // Function to initialize winner display from localStorage or default text
   function initializeWinnerDisplay() {
     var previousWinner = localStorage.getItem("previousWinner");
+    console.log("Previous winner from localStorage:", previousWinner); // Add this line for debugging
     if (previousWinner) {
-      var winnerImage = document.querySelector(".result-num-image");
-      if (winnerImage) {
-        winnerImage.src = `./images/${previousWinner}.png`;
-        winnerImage.alt = previousWinner;
-      }
+      updateWinnerImage(previousWinner);
     }
   }
 
@@ -138,13 +143,9 @@ document.addEventListener("DOMContentLoaded", function () {
     fetch("./update_result.php")
       .then((response) => response.json())
       .then((data) => {
+        console.log("Fetched data on interval:", data); // Add this line for debugging
         if (data.winner !== undefined) {
-          var image_url = `./images/${data.winner}.png`;
-          var winnerImage = document.querySelector(".result-num-image");
-          if (winnerImage) {
-            winnerImage.src = image_url;
-            winnerImage.alt = data.winner;
-          }
+          updateWinnerImage(data.winner);
           updateResultsTable();
           localStorage.setItem("previousWinner", data.winner);
         } else {
