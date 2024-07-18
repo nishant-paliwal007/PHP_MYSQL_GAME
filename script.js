@@ -5,6 +5,53 @@ function confirmLogout() {
   }
 }
 
+// Function to handle betOk button click
+function betOk() {
+  // Validate and prepare data before submitting
+  let totalAmount = 0;
+  let inputs = document.querySelectorAll('.bet-nums-cont input[type="text"]');
+  let form = document.getElementById('betAmountForm');
+
+  inputs.forEach((input) => {
+      let amount = parseInt(input.value);
+      if (!isNaN(amount) && amount >= 0) {
+          totalAmount += amount;
+      }
+  });
+
+  if (totalAmount < 10) {
+      alert("Minimum bet amount should be 10.");
+      return;
+  }
+
+  // Get total bet amount from the span element
+  let totalButton = document.getElementById('totalButton').textContent;
+  let totalBetAmount = parseInt(totalButton.replace('Total: ', ''));
+
+  // Append the total bet amount to the form
+  let totalAmountInput = document.createElement('input');
+  totalAmountInput.type = 'hidden';
+  totalAmountInput.name = 'total_bet_amount';
+  totalAmountInput.value = totalBetAmount;
+  form.appendChild(totalAmountInput);
+
+  // Append the bet_ok input to the form
+  let betOkInput = document.createElement('input');
+  betOkInput.type = 'hidden';
+  betOkInput.name = 'bet_ok';
+  betOkInput.value = '1';
+  form.appendChild(betOkInput);
+
+  // Set the form action to 'bet_ok.php' and submit the form
+  form.action = 'bet_ok.php';
+  form.submit();
+}
+
+
+
+
+
+
 var betAmount = 0; // Default bet amount
 
 function selectAmount(amount) {
