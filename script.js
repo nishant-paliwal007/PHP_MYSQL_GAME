@@ -5,52 +5,87 @@ function confirmLogout() {
   }
 }
 
-// Function to handle betOk button click
 function betOk() {
   // Validate and prepare data before submitting
   let totalAmount = 0;
+  let tickets = [];
   let inputs = document.querySelectorAll('.bet-nums-cont input[type="text"]');
-  let form = document.getElementById('betAmountForm');
+  let form = document.getElementById("betAmountForm");
 
   inputs.forEach((input) => {
-      let amount = parseInt(input.value);
-      if (!isNaN(amount) && amount >= 0) {
-          totalAmount += amount;
-      }
+    let amount = parseInt(input.value);
+    let number = input.id.split("_")[2]; // Get the number from the input id, e.g., bet_input_1 -> 1
+    if (!isNaN(amount) && amount > 0) {
+      totalAmount += amount;
+      tickets.push(amount + "*" + number); // Format as amount*number
+    }
   });
 
   if (totalAmount < 10) {
-      alert("Minimum bet amount should be 10.");
-      return;
+    alert("Minimum bet amount should be 10.");
+    // Clear inputs and total amount display
+    inputs.forEach((input) => (input.value = ""));
+    document.getElementById("totalButton").textContent = "Total: 0";
+    return;
   }
 
   // Get total bet amount from the span element
-  let totalButton = document.getElementById('totalButton').textContent;
-  let totalBetAmount = parseInt(totalButton.replace('Total: ', ''));
+  let totalButton = document.getElementById("totalButton").textContent;
+  let totalBetAmount = parseInt(totalButton.replace("Total: ", ""));
 
-  // Append the total bet amount to the form
-  let totalAmountInput = document.createElement('input');
-  totalAmountInput.type = 'hidden';
-  totalAmountInput.name = 'total_bet_amount';
-  totalAmountInput.value = totalBetAmount;
-  form.appendChild(totalAmountInput);
+  // Create form data object
+  let formData = new FormData();
+  formData.append("total_bet_amount", totalBetAmount);
+  formData.append("tickets", tickets.join(", "));
+  formData.append("bet_ok", "1");
 
-  // Append the bet_ok input to the form
-  let betOkInput = document.createElement('input');
-  betOkInput.type = 'hidden';
-  betOkInput.name = 'bet_ok';
-  betOkInput.value = '1';
-  form.appendChild(betOkInput);
-
-  // Set the form action to 'bet_ok.php' and submit the form
-  form.action = 'bet_ok.php';
-  form.submit();
+  // Send AJAX request to bet_ok.php
+  fetch("bet_ok.php", {
+    method: "POST",
+    body: formData,
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.status === "success") {
+        // Show success message and update balance dynamically
+        alert("Bet placed successfully. Ticket_amt: " + totalBetAmount);
+        updateBalance(); // Function to update balance dynamically
+        // Clear inputs and total amount display
+        inputs.forEach((input) => (input.value = ""));
+        document.getElementById("totalButton").textContent = "Total: 0";
+      } else {
+        // Show error message
+        if (data.message === "Insufficient balance.") {
+          alert("Insufficient balance!");
+          // Clear inputs and total amount display on insufficient balance
+          inputs.forEach((input) => (input.value = ""));
+          document.getElementById("totalButton").textContent = "Total: 0";
+        } else {
+          alert("Error: " + data.message);
+        }
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("An error occurred while placing the bet.");
+    });
 }
 
-
-
-
-
+// Function to update balance dynamically
+function updateBalance() {
+  fetch("get_balance.php")
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.status === "success") {
+        document.getElementById("currentBalance").textContent = data.balance; // Update balance on the UI
+      } else {
+        console.error("Failed to fetch updated balance:", data.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching updated balance:", error);
+    });
+}
 
 var betAmount = 0; // Default bet amount
 
@@ -145,10 +180,14 @@ function updateCountdown() {
   }
 }
 
+// Function to update winner image dynamically
+
 function updateWinnerImage(winner) {
-  console.log("Updating winner image to:", winner); // Add this line for debugging
+  console.log("Updating winner image to:", winner); // For debugging
+
   var image_url = `./images/${winner}.png`;
   var winnerImage = document.querySelector(".result-num-image");
+
   if (winnerImage) {
     winnerImage.src = image_url;
     winnerImage.alt = winner;
@@ -170,13 +209,27 @@ function updateResultsTable() {
 }
 
 // Initialize winner display and start countdown
+// document.addEventListener("DOMContentLoaded", function () {
+//   // Function to initialize winner display from localStorage or default text
+//   function initializeWinnerDisplay() {
+//     var previousWinner = localStorage.getItem("previousWinner");
+//     console.log("Previous winner from localStorage:", previousWinner); // Add this line for debugging
+//     if (previousWinner) {
+//       updateWinnerImage(previousWinner);
+//     }
+//   }
+
+//   // Start the countdown and initial fetch
+//   initializeWinnerDisplay();
+//   updateCountdown();
+//   updateResultsTable();
 document.addEventListener("DOMContentLoaded", function () {
   // Function to initialize winner display from localStorage or default text
   function initializeWinnerDisplay() {
     var previousWinner = localStorage.getItem("previousWinner");
     console.log("Previous winner from localStorage:", previousWinner); // Add this line for debugging
     if (previousWinner) {
-      updateWinnerImage(previousWinner);
+      updateWinnerImage(); // Update winner image initially
     }
   }
 
@@ -192,7 +245,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((data) => {
         console.log("Fetched data on interval:", data); // Add this line for debugging
         if (data.winner !== undefined) {
-          updateWinnerImage(data.winner);
+          updateWinnerImage(); // Update winner image
           updateResultsTable();
           localStorage.setItem("previousWinner", data.winner);
         } else {
@@ -201,4 +254,34 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .catch((error) => console.error("Error:", error));
   }, 5 * 60 * 1000); // 5 minutes interval
+
+  // Interval to update winner image every minute (adjust interval as needed)
+  setInterval(updateWinnerImage, 60 * 1000); // Update winner image every minute
+});
+
+// Function to update winner image dynamically
+function updateWinnerImage() {
+  fetch("./fetch_latest_winner.php")
+    .then((response) => response.text())
+    .then((winner) => {
+      console.log("Updating winner image to:", winner); // For debugging
+      var image_url = `./images/${winner}.png`;
+      var winnerImage = document.querySelector(".result-num-image");
+
+      if (winnerImage) {
+        winnerImage.src = image_url;
+        winnerImage.alt = winner;
+      } else {
+        console.error("Winner image element not found");
+      }
+    })
+    .catch((error) => console.error("Error fetching latest winner:", error));
+}
+
+// Initialize winner display and update image with different function name
+document.addEventListener("DOMContentLoaded", function () {
+  updateWinnerImageUpdated(); // Initial update on page load
+
+  // Interval to update image every minute (adjust as needed)
+  setInterval(updateWinnerImageUpdated, 60000); // Update every minute (60000 ms)
 });

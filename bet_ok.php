@@ -14,36 +14,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["bet_ok"]) && isset($_
 
     // Validate and sanitize input data (if needed)
     $total_bet_amount = floatval($_POST["total_bet_amount"]);
-
-    if ($total_bet_amount < 10) {
-        echo json_encode(array("status" => "error", "message" => "Minimum bet amount should be 10."));
-        exit;
-    }
-
-    // Determine current time and calculate next draw time
-    date_default_timezone_set('Asia/Kolkata'); // Set the timezone to IST
-    $current_time = date("h:i A"); // Example: 01:07 PM
-    $current_time_timestamp = strtotime($current_time);
-
-    // Calculate next draw time in 5-minute intervals
-    $draw_time_timestamp = ceil($current_time_timestamp / (5 * 60)) * (5 * 60);
-    $draw_time = date("h:i A", $draw_time_timestamp);
-
-    // Ticket time is the current time when the bet is placed
-    $ticket_time = $current_time;
-
-    // Prepare to handle betting numbers (1 to 12)
-    $betting_numbers = [];
-    for ($i = 1; $i <= 12; $i++) {
-        $input_name = 'bet_input_' . $i;
-        if (isset($_POST[$input_name])) {
-            $betting_numbers[$i] = floatval($_POST[$input_name]);
-        }
-    }
+    $tickets = isset($_POST['tickets']) ? mysqli_real_escape_string($conn, $_POST['tickets']) : '';
 
     // Check user's balance before placing the bet
     $query_balance = "SELECT balance FROM balance WHERE username = '$username'";
     $result_balance = mysqli_query($conn, $query_balance);
+
     if ($result_balance) {
         $row_balance = mysqli_fetch_assoc($result_balance);
         $current_balance = $row_balance['balance'];
@@ -57,54 +33,45 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["bet_ok"]) && isset($_
         exit;
     }
 
-    // Insert bet into record_game table
-    $tickets = '';
-    $ticket_qty = '';
-    $ticket_winning_qty = '';
-    $ticket_winning_amt = '';
-    $winning_number = '';
-    $barcode = '';
-
-    foreach ($betting_numbers as $number => $amount) {
-        $tickets .= "$number * $amount, ";
-        $ticket_qty .= "1, "; // Assuming each bet is one ticket
-        $ticket_winning_qty .= "0, "; // Assuming no winning quantity initially
-        $ticket_winning_amt .= "0, "; // Assuming no winning amount initially
-        $winning_number .= "'', "; // Assuming no winning number initially
-        $barcode .= "'', "; // Assuming no barcode initially
+    if ($total_bet_amount < 10) {
+        echo json_encode(array("status" => "error", "message" => "Minimum bet amount should be 10."));
+        exit;
     }
 
-    $tickets = rtrim($tickets, ", ");
-    $ticket_qty = rtrim($ticket_qty, ", ");
-    $ticket_winning_qty = rtrim($ticket_winning_qty, ", ");
-    $ticket_winning_amt = rtrim($ticket_winning_amt, ", ");
-    $winning_number = rtrim($winning_number, ", ");
-    $barcode = rtrim($barcode, ", ");
+    // Determine current time and calculate next draw time
+    date_default_timezone_set('Asia/Kolkata'); // Set the timezone to IST
+    $current_time = date("h:i A"); // Example: 06:05 PM
+    $current_time_timestamp = strtotime($current_time);
 
-    $query_insert_bet = "INSERT INTO record_game (username, draw_time, ticket_time, tickets, ticket_date, ticket_qty, ticket_amt, ticket_winning_qty, ticket_winning_amt, winning_number, barcode) VALUES ('$username', '$draw_time', '$ticket_time', '$tickets', CURDATE(), '$ticket_qty', '$total_bet_amount', '$ticket_winning_qty', '$ticket_winning_amt', '$winning_number', '$barcode')";
+    // Calculate next draw time in 5-minute intervals
+    $draw_time_timestamp = ceil($current_time_timestamp / (5 * 60)) * (5 * 60);
 
-    $result_insert = mysqli_query($conn, $query_insert_bet);
-    if ($result_insert) {
+    // If the bet is placed after the calculated draw_time, increase draw_time by 5 minutes
+    if ($current_time_timestamp >= $draw_time_timestamp) {
+        $draw_time_timestamp += (5 * 60);
+    }
+
+    $draw_time = date("h:i A", $draw_time_timestamp);
+
+    // Ticket time should not be equal to draw time
+    $ticket_time = ($current_time_timestamp >= $draw_time_timestamp) ? date("h:i A", $draw_time_timestamp + (5 * 60)) : $current_time;
+
+    // Insert bet into record_game table
+    $query = "INSERT INTO record_game (username, draw_time, ticket_time, tickets, ticket_date, ticket_qty, ticket_amt, ticket_winning_qty, ticket_winning_amt, winning_number, barcode)
+              VALUES ('$username', '$draw_time', '$ticket_time', '$tickets', CURDATE(), '', $total_bet_amount, '', '', '', '')";
+
+    if (mysqli_query($conn, $query)) {
         // Deduct the bet amount from user's balance
         $new_balance = $current_balance - $total_bet_amount;
-        $query_update_balance = "UPDATE balance SET balance = '$new_balance' WHERE username = '$username'";
-        $result_update = mysqli_query($conn, $query_update_balance);
-
-        if ($result_update) {
-            // Return success response
-            echo json_encode(array("status" => "success", "message" => "Bet placed successfully. Ticket Amount: $total_bet_amount"));
+        $update_balance_query = "UPDATE balance SET balance = $new_balance WHERE username = '$username'";
+        if (mysqli_query($conn, $update_balance_query)) {
+            echo json_encode(array("status" => "success", "message" => "Bet placed successfully."));
         } else {
-            echo json_encode(array("status" => "error", "message" => "Failed to update user balance after bet placement."));
+            echo json_encode(array("status" => "error", "message" => "Failed to update user balance."));
         }
     } else {
-        // Return error response if insert failed
-        echo json_encode(array("status" => "error", "message" => "Failed to place bet."));
+        echo json_encode(array("status" => "error", "message" => "Error placing the bet."));
     }
-
-    // Close database connection
-    mysqli_close($conn);
 } else {
-    // Handle if bet_ok parameter is not set
     echo json_encode(array("status" => "error", "message" => "Invalid request."));
 }
-?>

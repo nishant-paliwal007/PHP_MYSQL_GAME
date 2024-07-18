@@ -29,7 +29,7 @@ include "./populate_results.php";
                     $balance = $balance_data['balance'];
 
                     ?>
-                    <p class="balance"><?php echo $balance; ?></p>
+                    <p class="balance" id="currentBalance"><?php echo $balance; ?></p>
                 </div>
                 <div class="time-container">
                     <div class="next-result-time"></div>
