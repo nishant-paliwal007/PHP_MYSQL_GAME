@@ -156,7 +156,7 @@ function updateCountdown() {
           .then((data) => {
             console.log("Fetched data on countdown end:", data); // Add this line for debugging
             if (data.winner !== undefined) {
-              // updateWinnerImage(data.winner);
+              updateWinnerImage(data.winner);
               updateResultsTable();
               localStorage.setItem("previousWinner", data.winner);
             } else {
@@ -180,22 +180,6 @@ function updateCountdown() {
   }
 }
 
-// Function to update winner image dynamically
-
-// function updateWinnerImage(winner) {
-//   console.log("Updating winner image to:", winner); // For debugging
-
-//   var image_url = `./images/${winner}.png`;
-//   var winnerImage = document.querySelector(".result-num-image");
-
-//   if (winnerImage) {
-//     winnerImage.src = image_url;
-//     winnerImage.alt = winner;
-//   } else {
-//     console.error("Winner image element not found");
-//   }
-// }
-
 // Function to update results table
 function updateResultsTable() {
   fetch("./fetch_latest_results.php")
@@ -214,7 +198,7 @@ document.addEventListener("DOMContentLoaded", function () {
     var previousWinner = localStorage.getItem("previousWinner");
     console.log("Previous winner from localStorage:", previousWinner); // Add this line for debugging
     if (previousWinner) {
-      updateWinnerImageUpdated(); // Update winner image initially
+      updateWinnerImage(previousWinner); // Update winner image initially
     }
   }
 
@@ -230,38 +214,31 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((data) => {
         console.log("Fetched data on interval:", data); // Add this line for debugging
         if (data.winner !== undefined) {
-          updateWinnerImageUpdated(); // Update winner image
           updateResultsTable();
           localStorage.setItem("previousWinner", data.winner);
+          updateWinnerImage(data.winner); // Update winner image
         } else {
           console.error("No winner data received");
         }
       })
       .catch((error) => console.error("Error:", error));
   }, 5 * 60 * 1000); // 5 minutes interval
-
-  // Interval to update winner image every minute (adjust interval as needed)
-  setInterval(updateWinnerImageUpdated, 60 * 1000); // Update winner image every minute
 });
 
 // Function to update winner image dynamically
-function updateWinnerImageUpdated() {
-  fetch("./fetch_latest_winner.php")
-    .then((response) => response.text())
-    .then((winner) => {
-      console.log("Updating winner image to:", winner); // For debugging
-      var image_url = `./images/${winner}.png`;
-      var winnerImage = document.querySelector(".result-num-image");
+function updateWinnerImage(winner) {
+  console.log("Updating winner image to:", winner); // For debugging
+  var image_url = `./images/${winner}.png`;
+  var winnerImage = document.querySelector(".result-num-image");
 
-      if (winnerImage) {
-        winnerImage.src = image_url;
-        winnerImage.alt = winner;
-      } else {
-        console.error("Winner image element not found");
-      }
-    })
-    .catch((error) => console.error("Error fetching latest winner:", error));
+  if (winnerImage) {
+    winnerImage.src = image_url;
+    winnerImage.alt = winner;
+  } else {
+    console.error("Winner image element not found");
+  }
 }
+
 
 function checkDrawTime() {
   fetch("check_draw_time.php", {
