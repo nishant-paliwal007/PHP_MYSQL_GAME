@@ -14,11 +14,14 @@ include "./populate_results.php";
     <script src="./script.js"></script>
 
 </head>
+
 <body>
     <div class="game-container">
+
         <div class="balance-result-container">
             <div class="points-time-cont">
                 <div class="balance-container">
+
                     <p class="points-text">POINTS</p>
                     <!-- Fetch the balance from PHP -->
                     <?php
@@ -36,6 +39,9 @@ include "./populate_results.php";
                     <div class="running-time"></div>
                 </div>
             </div>
+            <div>
+                <?php echo "<h1 style='font-family: Roboto; font-style: italic; color:red;'>Welcome {$_SESSION['username']}!&#128522;</h1>"; ?>
+            </div>
             <div class="win-res-container">
                 <div class="winner-container">
                     <div class="winner-text-cont">
@@ -44,7 +50,7 @@ include "./populate_results.php";
                         <p class="total-bet-amt" style="background-color: #303030;height: 
                         35px;width: 280px;border-radius: 10px;margin-top: 0px;color: #ffffff;
                         display: flex;justify-content: center;align-items: center;">Winner</p>
-                        <p class="total-bet-amt" style="background-color: darkgrey;height: 
+                        <p class="total-bet-amt" id="TotalBetAmount" style="background-color: darkgrey;height: 
                         35px;width: 280px;border-radius: 10px;margin-top: 0px;color: #ffffff;
                         display: flex;justify-content: center;align-items: center;">Total Winning: 0</p>
 

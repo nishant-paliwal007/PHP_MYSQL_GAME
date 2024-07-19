@@ -156,7 +156,7 @@ function updateCountdown() {
           .then((data) => {
             console.log("Fetched data on countdown end:", data); // Add this line for debugging
             if (data.winner !== undefined) {
-              updateWinnerImage(data.winner);
+              // updateWinnerImage(data.winner);
               updateResultsTable();
               localStorage.setItem("previousWinner", data.winner);
             } else {
@@ -182,19 +182,19 @@ function updateCountdown() {
 
 // Function to update winner image dynamically
 
-function updateWinnerImage(winner) {
-  console.log("Updating winner image to:", winner); // For debugging
+// function updateWinnerImage(winner) {
+//   console.log("Updating winner image to:", winner); // For debugging
 
-  var image_url = `./images/${winner}.png`;
-  var winnerImage = document.querySelector(".result-num-image");
+//   var image_url = `./images/${winner}.png`;
+//   var winnerImage = document.querySelector(".result-num-image");
 
-  if (winnerImage) {
-    winnerImage.src = image_url;
-    winnerImage.alt = winner;
-  } else {
-    console.error("Winner image element not found");
-  }
-}
+//   if (winnerImage) {
+//     winnerImage.src = image_url;
+//     winnerImage.alt = winner;
+//   } else {
+//     console.error("Winner image element not found");
+//   }
+// }
 
 // Function to update results table
 function updateResultsTable() {
@@ -208,28 +208,13 @@ function updateResultsTable() {
     );
 }
 
-// Initialize winner display and start countdown
-// document.addEventListener("DOMContentLoaded", function () {
-//   // Function to initialize winner display from localStorage or default text
-//   function initializeWinnerDisplay() {
-//     var previousWinner = localStorage.getItem("previousWinner");
-//     console.log("Previous winner from localStorage:", previousWinner); // Add this line for debugging
-//     if (previousWinner) {
-//       updateWinnerImage(previousWinner);
-//     }
-//   }
-
-//   // Start the countdown and initial fetch
-//   initializeWinnerDisplay();
-//   updateCountdown();
-//   updateResultsTable();
 document.addEventListener("DOMContentLoaded", function () {
   // Function to initialize winner display from localStorage or default text
   function initializeWinnerDisplay() {
     var previousWinner = localStorage.getItem("previousWinner");
     console.log("Previous winner from localStorage:", previousWinner); // Add this line for debugging
     if (previousWinner) {
-      updateWinnerImage(); // Update winner image initially
+      updateWinnerImageUpdated(); // Update winner image initially
     }
   }
 
@@ -245,7 +230,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .then((data) => {
         console.log("Fetched data on interval:", data); // Add this line for debugging
         if (data.winner !== undefined) {
-          updateWinnerImage(); // Update winner image
+          updateWinnerImageUpdated(); // Update winner image
           updateResultsTable();
           localStorage.setItem("previousWinner", data.winner);
         } else {
@@ -256,11 +241,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }, 5 * 60 * 1000); // 5 minutes interval
 
   // Interval to update winner image every minute (adjust interval as needed)
-  setInterval(updateWinnerImage, 60 * 1000); // Update winner image every minute
+  setInterval(updateWinnerImageUpdated, 60 * 1000); // Update winner image every minute
 });
 
 // Function to update winner image dynamically
-function updateWinnerImage() {
+function updateWinnerImageUpdated() {
   fetch("./fetch_latest_winner.php")
     .then((response) => response.text())
     .then((winner) => {
@@ -278,10 +263,36 @@ function updateWinnerImage() {
     .catch((error) => console.error("Error fetching latest winner:", error));
 }
 
-// Initialize winner display and update image with different function name
-document.addEventListener("DOMContentLoaded", function () {
-  updateWinnerImageUpdated(); // Initial update on page load
+function checkDrawTime() {
+  fetch("check_draw_time.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.status === "success") {
+        console.log("Winning Number:", data.winning_number);
+        console.log("Total Winning Amount:", data.winning_amount);
 
-  // Interval to update image every minute (adjust as needed)
-  setInterval(updateWinnerImageUpdated, 60000); // Update every minute (60000 ms)
-});
+        // Update the UI with the winning amount
+        document.getElementById("TotalBetAmount").textContent =
+          "Total Winning: " + data.winning_amount;
+
+        // Display the winning amount for 10 seconds
+        setTimeout(() => {
+          document.getElementById("TotalBetAmount").textContent =
+            "Total Winning: 0";
+        }, 10000);
+      } else {
+        console.error("Error:", data.message);
+      }
+    })
+    .catch((error) => {
+      console.error("Fetch Error:", error);
+    });
+}
+
+// Check draw time every minute
+setInterval(checkDrawTime, 60000); // 60000 milliseconds = 1 minute

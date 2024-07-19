@@ -55,10 +55,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["bet_ok"]) && isset($_
 
     // Ticket time should not be equal to draw time
     $ticket_time = ($current_time_timestamp >= $draw_time_timestamp) ? date("h:i A", $draw_time_timestamp + (5 * 60)) : $current_time;
-
-    // Insert bet into record_game table
-    $query = "INSERT INTO record_game (username, draw_time, ticket_time, tickets, ticket_date, ticket_qty, ticket_amt, ticket_winning_qty, ticket_winning_amt, winning_number, barcode)
-              VALUES ('$username', '$draw_time', '$ticket_time', '$tickets', CURDATE(), '', $total_bet_amount, '', '', '', '')";
+    // function to generate the barcode 
+    function generateBarcode() {
+        $barcode = "";
+        for ($i = 0; $i < 10; $i++) {
+            $barcode .= (string) rand(1, 9);
+        }
+        return $barcode;
+    }
+    $code = generateBarcode();
+    $escaped_code = mysqli_real_escape_string($conn, $code);
+    $query = "INSERT INTO record_game (username, draw_time, ticket_time, tickets, ticket_date, ticket_qty, ticket_amt, ticket_winning_qty, ticket_winning_amt, winning_number, barcode) 
+    VALUES ('$username', '$draw_time', '$ticket_time', '$tickets', CURDATE(), '$total_bet_amount', $total_bet_amount, '', '', '', '$escaped_code')";
 
     if (mysqli_query($conn, $query)) {
         // Deduct the bet amount from user's balance
