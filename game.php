@@ -62,7 +62,7 @@ include "./populate_results.php";
                     </div>
                 </div>
                 <table class="result-table">
-
+              <!-- table data is shown here dynamically by using AJAX -->
                 </table>
             </div>
         </div>

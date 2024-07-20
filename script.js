@@ -240,6 +240,40 @@ function updateWinnerImage(winner) {
 }
 
 
+// function checkDrawTime() {
+//   fetch("check_draw_time.php", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//   })
+//     .then((response) => response.json())
+//     .then((data) => {
+//       if (data.status === "success") {
+//         console.log("Winning Number:", data.winning_number);
+//         console.log("Total Winning Amount:", data.winning_amount);
+
+//         // Update the UI with the winning amount
+//         document.getElementById("TotalBetAmount").textContent =
+//           "Total Winning: " + data.winning_amount;
+
+//         // Display the winning amount for 10 seconds
+//         setTimeout(() => {
+//           document.getElementById("TotalBetAmount").textContent =
+//             "Total Winning: 0";
+//         }, 10000);
+//       } else {
+//         console.error("Error:", data.message);
+//       }
+//     })
+//     .catch((error) => {
+//       console.error("Fetch Error:", error);
+//     });
+// }
+
+// // Check draw time every minute
+// setInterval(checkDrawTime, 60000); // 60000 milliseconds = 1 minute
+
 function checkDrawTime() {
   fetch("check_draw_time.php", {
     method: "POST",
@@ -271,5 +305,8 @@ function checkDrawTime() {
     });
 }
 
-// Check draw time every minute
+// Check draw time every 1 minute
 setInterval(checkDrawTime, 60000); // 60000 milliseconds = 1 minute
+
+// Call checkDrawTime immediately to update without delay
+checkDrawTime();
