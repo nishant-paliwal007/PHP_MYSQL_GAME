@@ -1,9 +1,10 @@
 <?php
-// Include necessary files for database connection and session management
+// get_balance.php
+
 include "./connection.php";
 include "./session_check.php";
 
-// Check if the user is logged in and get username from session
+// Ensure the session is started
 if (!isset($_SESSION["username"]) || empty($_SESSION["username"])) {
     echo json_encode(array("status" => "error", "message" => "User session not found."));
     exit;
@@ -11,17 +12,15 @@ if (!isset($_SESSION["username"]) || empty($_SESSION["username"])) {
 
 $username = $_SESSION["username"];
 
-// Fetch user's current balance from the database
+// Query to get the current balance
 $query_balance = "SELECT balance FROM balance WHERE username = '$username'";
 $result_balance = mysqli_query($conn, $query_balance);
 
-if ($result_balance && mysqli_num_rows($result_balance) > 0) {
+if ($result_balance) {
     $row_balance = mysqli_fetch_assoc($result_balance);
-    $currentBalance = $row_balance['balance'];
-
-    echo json_encode(array("status" => "success", "balance" => $currentBalance));
-    exit;
+    $current_balance = $row_balance['balance'];
+    echo json_encode(array("status" => "success", "balance" => $current_balance));
 } else {
-    echo json_encode(array("status" => "error", "message" => "Failed to fetch user balance."));
-    exit;
+    echo json_encode(array("status" => "error", "message" => "Error fetching user balance."));
 }
+?>

@@ -50,7 +50,7 @@ include "./populate_results.php";
                         <p class="total-bet-amt" style="background-color: #303030;height: 
                         35px;width: 280px;border-radius: 10px;margin-top: 0px;color: #ffffff;
                         display: flex;justify-content: center;align-items: center;">Winner</p>
-                        <p class="total-bet-amt" id="TotalBetAmount" style="background-color: darkgrey;height: 
+                        <p class="total-bet-amt" id="totalWin" style="background-color: darkgrey;height: 
                         35px;width: 280px;border-radius: 10px;margin-top: 0px;color: #ffffff;
                         display: flex;justify-content: center;align-items: center;">Total Winning: 0</p>
 
