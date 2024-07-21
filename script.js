@@ -1,3 +1,4 @@
+
 function confirmLogout() {
   var result = confirm("Are you sure you want to logout?");
   if (result) {
@@ -137,47 +138,41 @@ function updateCountdown() {
     nextResultTime.setSeconds(0, 0);
   }
 
-  if (nextResultTime) {
-    var countdown = (nextResultTime - now) / 1000;
+  var countdown = nextResultTime ? (nextResultTime - now) / 1000 : 0;
 
-    var interval = setInterval(function () {
-      var minutes = Math.floor(countdown / 60);
-      var seconds = Math.floor(countdown % 60);
-      document.querySelector(".running-time").innerText =
-        minutes.toString().padStart(2, "0") +
-        ":" +
-        seconds.toString().padStart(2, "0");
-      countdown--;
+  var interval = setInterval(function () {
+    var minutes = Math.floor(countdown / 60);
+    var seconds = Math.floor(countdown % 60);
+    document.querySelector(".running-time").innerText =
+      minutes.toString().padStart(2, "0") +
+      ":" +
+      seconds.toString().padStart(2, "0");
+    countdown--;
 
-      if (countdown < 0) {
-        clearInterval(interval);
-        fetch("./update_result.php")
-          .then((response) => response.json())
-          .then((data) => {
-            console.log("Fetched data on countdown end:", data); // Add this line for debugging
-            if (data.winner !== undefined) {
-              updateWinnerImage(data.winner);
-              updateResultsTable();
-              localStorage.setItem("previousWinner", data.winner);
-            } else {
-              console.error("No winner data received");
-            }
-          })
-          .catch((error) => console.error("Error:", error));
+    if (countdown < 0) {
+      clearInterval(interval);
+      fetch("./update_result.php")
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.winner !== undefined) {
+            updateWinnerImage(data.winner);
+            updateResultsTable();
+            localStorage.setItem("previousWinner", data.winner);
+          } else {
+            console.error("No winner data received");
+          }
+        })
+        .catch((error) => console.error("Error:", error));
 
-        updateCountdown();
-      }
-    }, 1000);
+      updateCountdown();
+    }
+  }, 1000);
 
-    document.querySelector(".next-result-time").innerText =
-      nextResultTime.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-  } else {
-    document.querySelector(".running-time").innerText = "--:--";
-    document.querySelector(".next-result-time").innerText = "--:--";
-  }
+  document.querySelector(".next-result-time").innerText =
+    nextResultTime ? nextResultTime.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }) : "--:--";
 }
 
 // Function to update results table
@@ -192,39 +187,6 @@ function updateResultsTable() {
     );
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  // Function to initialize winner display from localStorage or default text
-  function initializeWinnerDisplay() {
-    var previousWinner = localStorage.getItem("previousWinner");
-    console.log("Previous winner from localStorage:", previousWinner); // Add this line for debugging
-    if (previousWinner) {
-      updateWinnerImage(previousWinner); // Update winner image initially
-    }
-  }
-
-  // Start the countdown and initial fetch
-  initializeWinnerDisplay();
-  updateCountdown();
-  updateResultsTable();
-
-  // Interval to update results every 5 minutes
-  setInterval(function () {
-    fetch("./update_result.php")
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Fetched data on interval:", data); // Add this line for debugging
-        if (data.winner !== undefined) {
-          updateResultsTable();
-          localStorage.setItem("previousWinner", data.winner);
-          updateWinnerImage(data.winner); // Update winner image
-        } else {
-          console.error("No winner data received");
-        }
-      })
-      .catch((error) => console.error("Error:", error));
-  }, 5 * 60 * 1000); // 5 minutes interval
-});
-
 // Function to update winner image dynamically
 function updateWinnerImage(winner) {
   console.log("Updating winner image to:", winner); // For debugging
@@ -238,167 +200,6 @@ function updateWinnerImage(winner) {
     console.error("Winner image element not found");
   }
 }
-
-// function checkDrawTime() {
-//   fetch("check_draw_time.php", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//   })
-//     .then((response) => response.json())
-//     .then((data) => {
-//       if (data.status === "success") {
-//         console.log("Winning Number:", data.winning_number);
-//         console.log("Total Winning Amount:", data.winning_amount);
-
-//         const totalWinElement = document.getElementById("totalWin");
-//         totalWinElement.textContent = "Total Winning: " + data.winning_amount;
-
-//         // Fetch and update the balance after 10 seconds
-//         new Promise((resolve) => {
-//           setTimeout(() => {
-//             totalWinElement.textContent = "Total Winning: 0";
-//             resolve();
-//           }, 10000); // 10 seconds delay
-//         })
-//         .then(() => {
-//           // Fetch the updated balance after the 10-second delay
-//           return fetch("get_balance.php", {
-//             method: "POST",
-//             headers: {
-//               "Content-Type": "application/json",
-//             },
-//           });
-//         })
-//         .then((response) => response.json())
-//         .then((balanceData) => {
-//           if (balanceData.status === "success") {
-//             document.getElementById("currentBalance").textContent = balanceData.balance;
-//           } else {
-//             console.error("Error:", balanceData.message);
-//           }
-//         })
-//         .catch((error) => {
-//           console.error("Fetch Error:", error);
-//         });
-//       } else {
-//         console.error("Error:", data.message);
-//       }
-//     })
-//     .catch((error) => {
-//       console.error("Fetch Error:", error);
-//     });
-// }
-
-// function scheduleNextCheck() {
-//   const now = new Date();
-//   const nextDrawMinutes = Math.ceil(now.getMinutes() / 5) * 5;
-//   const nextDrawTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), nextDrawMinutes, 0, 0);
-
-//   const timeUntilNextDraw = nextDrawTime - now;
-//   console.log(`Next draw time scheduled in ${timeUntilNextDraw / 1000} seconds`);
-
-//   setTimeout(() => {
-//     checkDrawTime();
-//     setInterval(checkDrawTime, 5 * 60 * 1000); // Check every 5 minutes after the initial check
-//   }, timeUntilNextDraw);
-// }
-
-// // Call scheduleNextCheck immediately to set the first timeout
-// scheduleNextCheck();
-
-// function checkDrawTime() {
-//   fetch("check_draw_time.php", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//   })
-//     .then((response) => response.json())
-//     .then((data) => {
-//       if (data.status === "success") {
-//         console.log("Winning Number:", data.winning_number);
-//         console.log("Total Winning Amount:", data.winning_amount);
-
-//         const totalWinElement = document.getElementById("totalWin");
-
-//         // Calculate the delay until the next 2 seconds
-//         const delay = 2000; // 2 seconds
-
-//         // Update the element after 2 seconds
-//         new Promise((resolve) => {
-//           setTimeout(() => {
-//             totalWinElement.textContent =
-//               "Total Winning: " + data.winning_amount;
-//             resolve();
-//           }, delay); // 2 seconds delay
-//         })
-//           .then(() => {
-//             // Fetch and update the balance after the 10-second delay
-//             return new Promise((resolve) => {
-//               setTimeout(() => {
-//                 totalWinElement.textContent = "Total Winning: 0";
-//                 resolve();
-//               }, 10000); // 10 seconds delay
-//             });
-//           })
-//           .then(() => {
-//             // Fetch the updated balance after the 10-second delay
-//             return fetch("get_balance.php", {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//               },
-//             });
-//           })
-//           .then((response) => response.json())
-//           .then((balanceData) => {
-//             if (balanceData.status === "success") {
-//               document.getElementById("currentBalance").textContent =
-//                 balanceData.balance;
-//             } else {
-//               console.error("Error:", balanceData.message);
-//             }
-//           })
-//           .catch((error) => {
-//             console.error("Fetch Error:", error);
-//           });
-//       } else {
-//         console.error("Error:", data.message);
-//       }
-//     })
-//     .catch((error) => {
-//       console.error("Fetch Error:", error);
-//     });
-// }
-
-// function scheduleNextCheck() {
-//   const now = new Date();
-//   const nextDrawMinutes = Math.ceil(now.getMinutes() / 5) * 5;
-//   const nextDrawTime = new Date(
-//     now.getFullYear(),
-//     now.getMonth(),
-//     now.getDate(),
-//     now.getHours(),
-//     nextDrawMinutes,
-//     0,
-//     0
-//   );
-
-//   const timeUntilNextDraw = nextDrawTime - now;
-//   console.log(
-//     `Next draw time scheduled in ${timeUntilNextDraw / 1000} seconds`
-//   );
-
-//   setTimeout(() => {
-//     checkDrawTime();
-//     setInterval(checkDrawTime, 5 * 60 * 1000); // Check every 5 minutes after the initial check
-//   }, timeUntilNextDraw);
-// }
-
-// // Call scheduleNextCheck immediately to set the first timeout
-// scheduleNextCheck();
 
 function checkDrawTime() {
   fetch("check_draw_time.php", {
@@ -423,11 +224,14 @@ function checkDrawTime() {
 
         // Update the element after 2 seconds
         setTimeout(() => {
-          totalWinElement.textContent = "Total Winning: " + data.winning_amount;
+          totalWinElement.textContent = "You Won: " + data.winning_amount;
+          totalWinElement.style.color = "#FFFF00";
+          totalWinElement.style.fontWeight = "bold";
 
           // Fetch and update the balance after 10 seconds
           setTimeout(() => {
-            totalWinElement.textContent = "Total Winning: 0";
+            totalWinElement.textContent = "";
+            totalWinElement.style.color = "#ffffff";
 
             fetch("get_balance.php", {
               method: "POST",
@@ -471,16 +275,35 @@ function scheduleNextCheck() {
     0
   );
 
+  if (now > nextDrawTime) {
+    nextDrawTime.setMinutes(nextDrawTime.getMinutes() + 5);
+  }
+
   const timeUntilNextDraw = nextDrawTime - now;
-  console.log(
-    `Next draw time scheduled in ${timeUntilNextDraw / 1000} seconds`
-  );
 
   setTimeout(() => {
     checkDrawTime();
-    setInterval(checkDrawTime, 5 * 60 * 1000); // Check every 5 minutes after the initial check
+    scheduleNextCheck();
   }, timeUntilNextDraw);
 }
 
-// Call scheduleNextCheck immediately to set the first timeout
-scheduleNextCheck();
+function initializeWinnerDisplay() {
+  fetch("./update_result.php")
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.winner) {
+        updateWinnerImage(data.winner);
+      } else {
+        console.error("No winner data received from server");
+      }
+    })
+    .catch((error) => console.error("Error fetching latest winner:", error));
+}
+
+// Initialize
+document.addEventListener("DOMContentLoaded", function () {
+  updateCountdown();
+  updateResultsTable();
+  initializeWinnerDisplay();
+  scheduleNextCheck();
+});
