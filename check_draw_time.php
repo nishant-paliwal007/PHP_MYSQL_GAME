@@ -1,4 +1,5 @@
 <?php
+
 // include "./connection.php";
 // include "./session_check.php";
 
@@ -15,16 +16,10 @@
 // $current_time = date('h:i A');
 // $current_date = date('Y-m-d');
 
-// // Display the current time
-// echo "Current Time: $current_time<br>";
-
 // // Calculate the next draw time based on the current time
 // $current_time_timestamp = strtotime($current_time);
 // $draw_time_timestamp = ceil($current_time_timestamp / (5 * 60)) * (5 * 60);
 // $draw_time = date("h:i A", $draw_time_timestamp);
-
-// // Display the calculated draw_time
-// echo "Calculated draw_time: $draw_time<br>";
 
 // // Check if the current time matches the draw time
 // if ($current_time === $draw_time) {
@@ -32,89 +27,70 @@
 //     $result_query = "SELECT res FROM result_single WHERE res_time = '$draw_time' AND res_date = '$current_date'";
 //     $result = mysqli_query($conn, $result_query);
 
-//     // Display the result query
-//     echo "Result Query: $result_query<br>";
-
 //     if ($result && mysqli_num_rows($result) > 0) {
 //         $row = mysqli_fetch_assoc($result);
 //         $winning_number = $row['res'];
 
-//         // Display retrieved winning_number
-//         echo "Retrieved winning_number: $winning_number<br>";
-
-//         // Update winning_number and ticket_winning_amt in record_game table only if not processed
-//         $update_query = "
-//             UPDATE record_game 
-//             SET winning_number = '$winning_number',
-//                 ticket_winning_amt = CASE 
-//                     WHEN tickets LIKE '%$winning_number%' THEN ticket_qty * 11 
-//                     ELSE ticket_winning_amt
-//                 END,
-//                 is_processed = 1
+//         // Fetch all relevant records for the user
+//         $fetch_tickets_query = "
+//             SELECT id, tickets 
+//             FROM record_game 
 //             WHERE draw_time = '$draw_time' 
 //               AND username = '$username'
 //               AND ticket_date = '$current_date'
 //               AND is_processed = 0
 //         ";
 
-//         // Display the update query
-//         echo "Update Query: $update_query<br>";
+//         $tickets_result = mysqli_query($conn, $fetch_tickets_query);
+//         $total_winning_amount = 0;
 
-//         if (mysqli_query($conn, $update_query)) {
-//             if (mysqli_affected_rows($conn) > 0) {
-//                 // Display success message
-//                 echo "Successfully updated winning number and ticket_winning_amt for draw_time: $draw_time<br>";
+//         while ($ticket_row = mysqli_fetch_assoc($tickets_result)) {
+//             $record_id = $ticket_row['id'];
+//             $tickets = $ticket_row['tickets'];
+//             $ticket_list = explode(',', $tickets);
+//             $winning_amount = 0;
 
-//                 // Calculate total winning amount
-//                 $tickets_query = "
-//                     SELECT tickets 
-//                     FROM record_game 
-//                     WHERE draw_time = '$draw_time' 
-//                       AND username = '$username'
-//                       AND ticket_date = '$current_date'
-//                       AND is_processed = 1
-//                 ";
+//             foreach ($ticket_list as $ticket) {
+//                 list($amount, $number) = explode('*', trim($ticket));
 
-//                 $tickets_result = mysqli_query($conn, $tickets_query);
-//                 $total_winning_amount = 0;
-
-//                 while ($ticket_row = mysqli_fetch_assoc($tickets_result)) {
-//                     $tickets = $ticket_row['tickets'];
-//                     $ticket_list = explode(', ', $tickets);
-
-//                     foreach ($ticket_list as $ticket) {
-//                         list($amount, $number) = explode('*', $ticket);
-
-//                         if ($number == $winning_number) {
-//                             $total_winning_amount += $amount * 11; // Assuming a fixed multiplier of 11
-//                         }
-//                     }
+//                 if ($number == $winning_number) {
+//                     $winning_amount += $amount * 11;
 //                 }
-
-//                 // Update balance for the user
-//                 $update_balance_query = "
-//                     UPDATE balance 
-//                     SET balance = balance + $total_winning_amount 
-//                     WHERE username = '$username'
-//                 ";
-
-//                 if (mysqli_query($conn, $update_balance_query)) {
-//                     echo json_encode(array(
-//                         "status" => "success",
-//                         "winning_number" => $winning_number,
-//                         "winning_amount" => $total_winning_amount
-//                     ));
-//                 } else {
-//                     echo "Error updating user balance: " . mysqli_error($conn) . "<br>";
-//                     echo json_encode(array("status" => "error", "message" => "Error updating user balance."));
-//                 }
-//             } else {
-//                 echo json_encode(array("status" => "error", "message" => "No new updates to process."));
 //             }
+
+//             // Update the winning amount for this record
+//             $update_record_query = "
+//                 UPDATE record_game 
+//                 SET winning_number = '$winning_number',
+//                     ticket_winning_amt = $winning_amount,
+//                     is_processed = 1
+//                 WHERE id = $record_id
+//             ";
+
+//             if (mysqli_query($conn, $update_record_query)) {
+//                 $total_winning_amount += $winning_amount;
+//             } else {
+//                 echo json_encode(array("status" => "error", "message" => "Error updating record ID $record_id."));
+//                 mysqli_close($conn);
+//                 exit;
+//             }
+//         }
+
+//         // Update balance for the user
+//         $update_balance_query = "
+//             UPDATE balance 
+//             SET balance = balance + $total_winning_amount 
+//             WHERE username = '$username'
+//         ";
+
+//         if (mysqli_query($conn, $update_balance_query)) {
+//             echo json_encode(array(
+//                 "status" => "success",
+//                 "winning_number" => $winning_number,
+//                 "winning_amount" => $total_winning_amount
+//             ));
 //         } else {
-//             // Display SQL error
-//             echo "Error updating winning number and ticket_winning_amt: " . mysqli_error($conn) . "<br>";
-//             echo json_encode(array("status" => "error", "message" => "Error updating winning number and ticket_winning_amt."));
+//             echo json_encode(array("status" => "error", "message" => "Error updating user balance."));
 //         }
 //     } else {
 //         echo json_encode(array("status" => "error", "message" => "No result found for current time."));
@@ -127,7 +103,9 @@
 // mysqli_close($conn);
 ?>
 
+
 <?php
+
 include "./connection.php";
 include "./session_check.php";
 
@@ -159,70 +137,69 @@ if ($current_time === $draw_time) {
         $row = mysqli_fetch_assoc($result);
         $winning_number = $row['res'];
 
-        // Update winning_number and ticket_winning_amt in record_game table only if not processed
-        $update_query = "
-            UPDATE record_game 
-            SET winning_number = '$winning_number',
-                ticket_winning_amt = CASE 
-                    WHEN tickets LIKE '%$winning_number%' THEN ticket_qty * 11 
-                    ELSE ticket_winning_amt
-                END,
-                is_processed = 1
+        // Fetch all relevant records for the user
+        $fetch_tickets_query = "
+            SELECT id, tickets 
+            FROM record_game 
             WHERE draw_time = '$draw_time' 
               AND username = '$username'
               AND ticket_date = '$current_date'
               AND is_processed = 0
         ";
 
-        if (mysqli_query($conn, $update_query)) {
-            if (mysqli_affected_rows($conn) > 0) {
-                // Calculate total winning amount
-                $tickets_query = "
-                    SELECT tickets 
-                    FROM record_game 
-                    WHERE draw_time = '$draw_time' 
-                      AND username = '$username'
-                      AND ticket_date = '$current_date'
-                      AND is_processed = 1
-                ";
+        $tickets_result = mysqli_query($conn, $fetch_tickets_query);
+        $total_winning_amount = 0;
+        $bet_placed = false;
 
-                $tickets_result = mysqli_query($conn, $tickets_query);
-                $total_winning_amount = 0;
+        while ($ticket_row = mysqli_fetch_assoc($tickets_result)) {
+            $record_id = $ticket_row['id'];
+            $tickets = $ticket_row['tickets'];
+            $ticket_list = explode(',', $tickets);
+            $winning_amount = 0;
 
-                while ($ticket_row = mysqli_fetch_assoc($tickets_result)) {
-                    $tickets = $ticket_row['tickets'];
-                    $ticket_list = explode(', ', $tickets);
+            foreach ($ticket_list as $ticket) {
+                list($amount, $number) = explode('*', trim($ticket));
 
-                    foreach ($ticket_list as $ticket) {
-                        list($amount, $number) = explode('*', $ticket);
-
-                        if ($number == $winning_number) {
-                            $total_winning_amount += $amount * 11; // Assuming a fixed multiplier of 11
-                        }
-                    }
+                if ($number == $winning_number) {
+                    $winning_amount += $amount * 11;
+                    $bet_placed = true; // A bet was placed
                 }
-
-                // Update balance for the user
-                $update_balance_query = "
-                    UPDATE balance 
-                    SET balance = balance + $total_winning_amount 
-                    WHERE username = '$username'
-                ";
-
-                if (mysqli_query($conn, $update_balance_query)) {
-                    echo json_encode(array(
-                        "status" => "success",
-                        "winning_number" => $winning_number,
-                        "winning_amount" => $total_winning_amount
-                    ));
-                } else {
-                    echo json_encode(array("status" => "error", "message" => "Error updating user balance."));
-                }
-            } else {
-                echo json_encode(array("status" => "error", "message" => "No new updates to process."));
             }
+
+            // Update the winning amount for this record
+            $update_record_query = "
+                UPDATE record_game 
+                SET winning_number = '$winning_number',
+                    ticket_winning_amt = $winning_amount,
+                    is_processed = 1
+                WHERE id = $record_id
+            ";
+
+            if (mysqli_query($conn, $update_record_query)) {
+                $total_winning_amount += $winning_amount;
+            } else {
+                echo json_encode(array("status" => "error", "message" => "Error updating record ID $record_id."));
+                mysqli_close($conn);
+                exit;
+            }
+        }
+
+        // Update balance for the user
+        $update_balance_query = "
+            UPDATE balance 
+            SET balance = balance + $total_winning_amount 
+            WHERE username = '$username'
+        ";
+
+        if (mysqli_query($conn, $update_balance_query)) {
+            echo json_encode(array(
+                "status" => "success",
+                "winning_number" => $winning_number,
+                "winning_amount" => $total_winning_amount,
+                "bet_placed" => $bet_placed // Include bet status in the response
+            ));
         } else {
-            echo json_encode(array("status" => "error", "message" => "Error updating winning number and ticket_winning_amt."));
+            echo json_encode(array("status" => "error", "message" => "Error updating user balance."));
         }
     } else {
         echo json_encode(array("status" => "error", "message" => "No result found for current time."));
@@ -234,4 +211,3 @@ if ($current_time === $draw_time) {
 // Close connection
 mysqli_close($conn);
 ?>
-

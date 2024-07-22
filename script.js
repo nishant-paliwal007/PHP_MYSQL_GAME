@@ -1,4 +1,3 @@
-
 function confirmLogout() {
   var result = confirm("Are you sure you want to logout?");
   if (result) {
@@ -120,62 +119,98 @@ function updateTotal() {
     "Total: " + total.toFixed(2); // Display total
 }
 
-// Function to update countdown timer
 function updateCountdown() {
-  var now = new Date();
-  var nextResultTime;
+  let nextResultTime;
 
-  // Calculate next result time within the same day
-  if (now.getHours() >= 8 && now.getHours() < 22) {
-    nextResultTime = new Date(
-      now.getTime() + (5 - (now.getMinutes() % 5)) * 60000
-    );
-  } else {
-    nextResultTime = undefined; // No active countdown outside 08:00 AM to 10:00 PM
-  }
-
-  if (nextResultTime) {
-    nextResultTime.setSeconds(0, 0);
-  }
-
-  var countdown = nextResultTime ? (nextResultTime - now) / 1000 : 0;
-
-  var interval = setInterval(function () {
-    var minutes = Math.floor(countdown / 60);
-    var seconds = Math.floor(countdown % 60);
-    document.querySelector(".running-time").innerText =
-      minutes.toString().padStart(2, "0") +
-      ":" +
-      seconds.toString().padStart(2, "0");
-    countdown--;
-
-    if (countdown < 0) {
-      clearInterval(interval);
-      fetch("./update_result.php")
-        .then((response) => response.json())
-        .then((data) => {
-          if (data.winner !== undefined) {
-            updateWinnerImage(data.winner);
-            updateResultsTable();
-            localStorage.setItem("previousWinner", data.winner);
-          } else {
-            console.error("No winner data received");
-          }
-        })
-        .catch((error) => console.error("Error:", error));
-
-      updateCountdown();
+  function calculateNextResultTime() {
+    const now = new Date();
+    if (now.getHours() >= 8 && now.getHours() < 22) {
+      const minutesToNextInterval = 5 - (now.getMinutes() % 5);
+      const nextResultTime = new Date(
+        now.getTime() + minutesToNextInterval * 60000
+      );
+      nextResultTime.setSeconds(0, 0);
+      return nextResultTime;
+    } else {
+      return null; // No active countdown outside 08:00 AM to 10:00 PM
     }
-  }, 1000);
+  }
 
-  document.querySelector(".next-result-time").innerText =
-    nextResultTime ? nextResultTime.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    }) : "--:--";
+  function updateNextDrawTimeUI(nextResultTime) {
+    const hours = nextResultTime.getHours();
+    const minutes = nextResultTime.getMinutes();
+    const ampm = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12; // the hour '0' should be '12'
+    const nextDrawTime =
+      displayHours.toString().padStart(2, "0") +
+      ":" +
+      minutes.toString().padStart(2, "0") +
+      " " +
+      ampm;
+    const nextDrawTimeElement = document.querySelector(".next-result-time");
+    if (nextDrawTimeElement) {
+      nextDrawTimeElement.innerText = nextDrawTime;
+    }
+  }
+
+  function updateTimer() {
+    const now = Date.now();
+    if (nextResultTime) {
+      let countdown = (nextResultTime - now) / 1000;
+      if (countdown < 0) {
+        countdown = 0; // Prevent negative countdown
+      }
+      const minutes = Math.floor(countdown / 60);
+      const seconds = Math.floor(countdown % 60);
+      const runningTimeElement = document.querySelector(".running-time");
+      if (runningTimeElement) {
+        runningTimeElement.innerText =
+          minutes.toString().padStart(2, "0") +
+          ":" +
+          seconds.toString().padStart(2, "0");
+      }
+
+      if (countdown <= 0) {
+        // Trigger update immediately
+        fetch("./update_result.php")
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.winner !== undefined) {
+              updateWinnerImage(data.winner);
+              updateResultsTable();
+              localStorage.setItem("previousWinner", data.winner);
+            } else {
+              console.error("No winner data received");
+            }
+
+            // Recalculate the next result time immediately after updating the results
+            nextResultTime = calculateNextResultTime();
+            if (nextResultTime) {
+              updateNextDrawTimeUI(nextResultTime); // Update the next draw time in the UI
+            }
+
+            // Restart the timer for the next interval
+            requestAnimationFrame(updateTimer); // Call the updateTimer function again
+          })
+          .catch((error) => console.error("Error:", error));
+      } else {
+        // Continue updating the timer
+        requestAnimationFrame(updateTimer); // Call the updateTimer function again
+      }
+    }
+  }
+
+  // Initial setup
+  nextResultTime = calculateNextResultTime();
+  if (nextResultTime) {
+    updateNextDrawTimeUI(nextResultTime); // Initial update for the next draw time
+    // Start the timer update
+    updateTimer();
+  }
 }
 
-// Function to update results table
+updateCountdown(); // Call the function initially to start the countdown
+
 function updateResultsTable() {
   fetch("./fetch_latest_results.php")
     .then((response) => response.text())
@@ -201,6 +236,68 @@ function updateWinnerImage(winner) {
   }
 }
 
+// function checkDrawTime() {
+//   fetch("check_draw_time.php", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//   })
+//     .then((response) => response.json())
+//     .then((data) => {
+//       if (data.status === "success") {
+//         console.log("Winning Number:", data.winning_number);
+//         console.log("Total Winning Amount:", data.winning_amount);
+
+//         const totalWinElement = document.getElementById("totalWin");
+
+//         // Calculate the delay until 2 seconds after the draw time
+//         const now = new Date();
+//         const drawTime = new Date();
+//         drawTime.setSeconds(Math.ceil(now.getSeconds() / 5) * 5);
+//         const delay = Math.max(5000 - (now - drawTime), 0); // Ensure non-negative delay
+
+//         // Update the element after 5 seconds
+//         setTimeout(() => {
+//           totalWinElement.textContent =
+//             "🌟" + "You Won: " + data.winning_amount;
+//           totalWinElement.style.color = "#FFFF00";
+//           totalWinElement.style.fontWeight = "bold";
+
+//           // Fetch and update the balance after 10 seconds
+//           setTimeout(() => {
+//             totalWinElement.textContent = "";
+//             totalWinElement.style.color = "#ffffff";
+
+//             fetch("get_balance.php", {
+//               method: "POST",
+//               headers: {
+//                 "Content-Type": "application/json",
+//               },
+//             })
+//               .then((response) => response.json())
+//               .then((balanceData) => {
+//                 if (balanceData.status === "success") {
+//                   document.getElementById("currentBalance").textContent =
+//                     balanceData.balance;
+//                 } else {
+//                   console.error("Error:", balanceData.message);
+//                 }
+//               })
+//               .catch((error) => {
+//                 console.error("Fetch Error:", error);
+//               });
+//           }, 10000); // 10 seconds delay
+//         }, delay); // 5 seconds delay
+//       } else {
+//         console.error("Error:", data.message);
+//       }
+//     })
+//     .catch((error) => {
+//       console.error("Fetch Error:", error);
+//     });
+// }
+
 function checkDrawTime() {
   fetch("check_draw_time.php", {
     method: "POST",
@@ -211,48 +308,55 @@ function checkDrawTime() {
     .then((response) => response.json())
     .then((data) => {
       if (data.status === "success") {
-        console.log("Winning Number:", data.winning_number);
-        console.log("Total Winning Amount:", data.winning_amount);
+        if (data.bet_placed && data.winning_number) {
+          // Check if a bet was placed and there's a winning number
+          console.log("Winning Number:", data.winning_number);
+          console.log("Total Winning Amount:", data.winning_amount);
 
-        const totalWinElement = document.getElementById("totalWin");
+          const totalWinElement = document.getElementById("totalWin");
 
-        // Calculate the delay until 2 seconds after the draw time
-        const now = new Date();
-        const drawTime = new Date();
-        drawTime.setSeconds(Math.ceil(now.getSeconds() / 5) * 5);
-        const delay = Math.max(2000 - (now - drawTime), 0); // Ensure non-negative delay
+          // Calculate the delay until 2 seconds after the draw time
+          const now = new Date();
+          const drawTime = new Date();
+          drawTime.setSeconds(Math.ceil(now.getSeconds() / 5) * 5);
+          const delay = Math.max(2000 - (now - drawTime), 0); // Ensure non-negative delay
 
-        // Update the element after 2 seconds
-        setTimeout(() => {
-          totalWinElement.textContent = "You Won: " + data.winning_amount;
-          totalWinElement.style.color = "#FFFF00";
-          totalWinElement.style.fontWeight = "bold";
-
-          // Fetch and update the balance after 10 seconds
+          // Update the element after 2 seconds
           setTimeout(() => {
-            totalWinElement.textContent = "";
-            totalWinElement.style.color = "#ffffff";
+            totalWinElement.textContent =
+              "🌟" + "You Won: " + data.winning_amount;
+            totalWinElement.style.color = "#FFFF00";
+            totalWinElement.style.fontWeight = "bold";
 
-            fetch("get_balance.php", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-            })
-              .then((response) => response.json())
-              .then((balanceData) => {
-                if (balanceData.status === "success") {
-                  document.getElementById("currentBalance").textContent =
-                    balanceData.balance;
-                } else {
-                  console.error("Error:", balanceData.message);
-                }
+            // Fetch and update the balance after 10 seconds
+            setTimeout(() => {
+              totalWinElement.textContent = "";
+              totalWinElement.style.color = "#ffffff";
+
+              fetch("get_balance.php", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
               })
-              .catch((error) => {
-                console.error("Fetch Error:", error);
-              });
-          }, 10000); // 10 seconds delay
-        }, delay); // 2 seconds delay
+                .then((response) => response.json())
+                .then((balanceData) => {
+                  if (balanceData.status === "success") {
+                    document.getElementById("currentBalance").textContent =
+                      balanceData.balance;
+                  } else {
+                    console.error("Error:", balanceData.message);
+                  }
+                })
+                .catch((error) => {
+                  console.error("Fetch Error:", error);
+                });
+            }, 10000); // 10 seconds delay
+          }, delay); // 2 seconds delay
+        } else {
+          // Optionally handle cases where no bet was placed or there's no winning number
+          console.log("No bet placed or no winning number.");
+        }
       } else {
         console.error("Error:", data.message);
       }

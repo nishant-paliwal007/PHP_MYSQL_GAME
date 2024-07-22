@@ -32,7 +32,7 @@ include "./populate_results.php";
                     $balance = $balance_data['balance'];
 
                     ?>
-                    <p class="balance" id="currentBalance"><?php echo $balance; ?></p>
+                    <p class="balance" style="color:#FFFF00; font-weight:bold;" id="currentBalance"><?php echo $balance; ?></p>
                 </div>
                 <div class="time-container">
                     <div class="next-result-time"></div>
@@ -62,7 +62,7 @@ include "./populate_results.php";
                     </div>
                 </div>
                 <table class="result-table">
-              <!-- table data is shown here dynamically by using AJAX -->
+                    <!-- table data is shown here dynamically by using AJAX -->
                 </table>
             </div>
         </div>
