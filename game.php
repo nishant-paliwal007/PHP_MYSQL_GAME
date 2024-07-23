@@ -10,8 +10,8 @@ include "./populate_results.php";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="./script.js"></script>
+    <link rel="stylesheet" href="style.css?v=1.0">
+    <script src="./script.js?v=1.0"></script>
 
 </head>
 
@@ -21,7 +21,6 @@ include "./populate_results.php";
         <div class="balance-result-container">
             <div class="points-time-cont">
                 <div class="balance-container">
-
                     <p class="points-text">POINTS</p>
                     <!-- Fetch the balance from PHP -->
                     <?php
@@ -30,9 +29,8 @@ include "./populate_results.php";
                     $fetch_balance = mysqli_query($conn, "SELECT * FROM balance WHERE username= '$username'");
                     $balance_data = mysqli_fetch_assoc($fetch_balance);
                     $balance = $balance_data['balance'];
-
                     ?>
-                    <p class="balance" style="color:#FFFF00; font-weight:bold;" id="currentBalance"><?php echo $balance; ?></p>
+                    <p class="balance" style="color:#FFFF00; font-weight:bold;" id="currentBalance"><?php echo $balance ?></p>
                 </div>
                 <div class="time-container">
                     <div class="next-result-time"></div>
@@ -41,6 +39,7 @@ include "./populate_results.php";
             </div>
             <div>
                 <?php echo "<h1 style='font-family: Roboto; font-style: italic; color:red;'>Welcome {$_SESSION['username']}!&#128522;</h1>"; ?>
+                <?php echo "<p style='color: #a80c96; font-size:20px;margin-top: 50px; font-weight: bold;'>Place your bets before the countdown hits to 0!</p>" ?>
             </div>
             <div class="win-res-container">
                 <div class="winner-container">
@@ -150,9 +149,12 @@ include "./populate_results.php";
                 </div>
             </div>
         </div>
-        <?php
-        include "./game_buttons.php";
-        ?>
+        <div class="game-btns-container">
+            <?php
+
+            include "./game_buttons.php";
+            ?>
+        </div>
     </div>
     <script>
         // Update total after DOM loaded

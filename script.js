@@ -6,6 +6,16 @@ function confirmLogout() {
 }
 
 function betOk() {
+  // Get current time
+  const now = new Date();
+  const hours = now.getHours();
+
+  // Check if the current time is between 08:00 AM and 10:00 PM
+  if (hours < 8 || hours >= 22) {
+    alert("Betting is not allowed outside 08:00 AM to 10:00 PM.");
+    return;
+  }
+
   // Validate and prepare data before submitting
   let totalAmount = 0;
   let tickets = [];
@@ -137,19 +147,25 @@ function updateCountdown() {
   }
 
   function updateNextDrawTimeUI(nextResultTime) {
-    const hours = nextResultTime.getHours();
-    const minutes = nextResultTime.getMinutes();
-    const ampm = hours >= 12 ? "PM" : "AM";
-    const displayHours = hours % 12 || 12; // the hour '0' should be '12'
-    const nextDrawTime =
-      displayHours.toString().padStart(2, "0") +
-      ":" +
-      minutes.toString().padStart(2, "0") +
-      " " +
-      ampm;
     const nextDrawTimeElement = document.querySelector(".next-result-time");
-    if (nextDrawTimeElement) {
-      nextDrawTimeElement.innerText = nextDrawTime;
+    if (nextResultTime) {
+      const hours = nextResultTime.getHours();
+      const minutes = nextResultTime.getMinutes();
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const displayHours = hours % 12 || 12; // the hour '0' should be '12'
+      const nextDrawTime =
+        displayHours.toString().padStart(2, "0") +
+        ":" +
+        minutes.toString().padStart(2, "0") +
+        " " +
+        ampm;
+      if (nextDrawTimeElement) {
+        nextDrawTimeElement.innerText = nextDrawTime;
+      }
+    } else {
+      if (nextDrawTimeElement) {
+        nextDrawTimeElement.innerText = "--:--";
+      }
     }
   }
 
@@ -197,6 +213,12 @@ function updateCountdown() {
         // Continue updating the timer
         requestAnimationFrame(updateTimer); // Call the updateTimer function again
       }
+    } else {
+      // Update UI to indicate no active countdown
+      const runningTimeElement = document.querySelector(".running-time");
+      if (runningTimeElement) {
+        runningTimeElement.innerText = "--:--";
+      }
     }
   }
 
@@ -206,6 +228,9 @@ function updateCountdown() {
     updateNextDrawTimeUI(nextResultTime); // Initial update for the next draw time
     // Start the timer update
     updateTimer();
+  } else {
+    // No active countdown, update UI
+    updateNextDrawTimeUI(null);
   }
 }
 
@@ -235,68 +260,6 @@ function updateWinnerImage(winner) {
     console.error("Winner image element not found");
   }
 }
-
-// function checkDrawTime() {
-//   fetch("check_draw_time.php", {
-//     method: "POST",
-//     headers: {
-//       "Content-Type": "application/json",
-//     },
-//   })
-//     .then((response) => response.json())
-//     .then((data) => {
-//       if (data.status === "success") {
-//         console.log("Winning Number:", data.winning_number);
-//         console.log("Total Winning Amount:", data.winning_amount);
-
-//         const totalWinElement = document.getElementById("totalWin");
-
-//         // Calculate the delay until 2 seconds after the draw time
-//         const now = new Date();
-//         const drawTime = new Date();
-//         drawTime.setSeconds(Math.ceil(now.getSeconds() / 5) * 5);
-//         const delay = Math.max(5000 - (now - drawTime), 0); // Ensure non-negative delay
-
-//         // Update the element after 5 seconds
-//         setTimeout(() => {
-//           totalWinElement.textContent =
-//             "🌟" + "You Won: " + data.winning_amount;
-//           totalWinElement.style.color = "#FFFF00";
-//           totalWinElement.style.fontWeight = "bold";
-
-//           // Fetch and update the balance after 10 seconds
-//           setTimeout(() => {
-//             totalWinElement.textContent = "";
-//             totalWinElement.style.color = "#ffffff";
-
-//             fetch("get_balance.php", {
-//               method: "POST",
-//               headers: {
-//                 "Content-Type": "application/json",
-//               },
-//             })
-//               .then((response) => response.json())
-//               .then((balanceData) => {
-//                 if (balanceData.status === "success") {
-//                   document.getElementById("currentBalance").textContent =
-//                     balanceData.balance;
-//                 } else {
-//                   console.error("Error:", balanceData.message);
-//                 }
-//               })
-//               .catch((error) => {
-//                 console.error("Fetch Error:", error);
-//               });
-//           }, 10000); // 10 seconds delay
-//         }, delay); // 5 seconds delay
-//       } else {
-//         console.error("Error:", data.message);
-//       }
-//     })
-//     .catch((error) => {
-//       console.error("Fetch Error:", error);
-//     });
-// }
 
 function checkDrawTime() {
   fetch("check_draw_time.php", {
