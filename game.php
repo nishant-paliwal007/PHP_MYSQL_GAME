@@ -10,7 +10,7 @@ include "./populate_results.php";
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game</title>
-    <link rel="stylesheet" href="style.css?v=1.0">
+    <link rel="stylesheet" href="styles.css?v=1.0">
     <script src="./script.js?v=1.0"></script>
 
 </head>
@@ -149,11 +149,12 @@ include "./populate_results.php";
                 </div>
             </div>
         </div>
-        <div class="game-btns-container">
-            <?php
-
-            include "./game_buttons.php";
-            ?>
+        <div class="all-game-btns">
+            <div>
+                <?php
+                include "./game_buttons.php";
+                ?>
+            </div>
         </div>
     </div>
     <script>
